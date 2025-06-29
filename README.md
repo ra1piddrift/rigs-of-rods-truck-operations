@@ -16,4 +16,5 @@ When Python is installed, you should be able to double-click on the file to run 
 ## Credits
 
 Ra1pid - all of the code
+
 Rigs of Rods Documentation - for information about vehicle files
