@@ -10,6 +10,8 @@ This program is highly experimental and unfinished, so make sure to keep backups
 
 **Install Python 3 to run the script**
 
+Download Python 3 here: https://www.python.org/downloads/
+
 Place the main script, truck-operations.py, into a new folder, where you will be moving .truck and other RoR vehicle files into.
 
 When Python is installed, you should be able to double-click on the file to run it.
@@ -17,6 +19,12 @@ When Python is installed, you should be able to double-click on the file to run 
 The program is only able to read any file in the folder it is located in, so you will have to move the vehicle files you want into that folder for it to read it.
 
 Enter 'info' in the first prompt for basic menu navigation help.
+
+
+
+## Tutorials
+
+https://youtu.be/EX5QQ1qXWwM - using version 0.1
 
 
 
