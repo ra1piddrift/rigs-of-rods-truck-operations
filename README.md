@@ -22,6 +22,12 @@ Enter 'info' in the first prompt for basic menu navigation help.
 
 
 
+## Documentation
+
+Read program-functionality.txt for explanations of each function in the program. Currently unfinished.
+
+
+
 ## Tutorials
 
 https://youtu.be/EX5QQ1qXWwM - using version 0.1
