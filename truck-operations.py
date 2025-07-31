@@ -805,9 +805,9 @@ class Edit_node_groups:
         choice = 0
         while choice != -1:
             self.show_undo_history()
-            print("Menu:")
+            print("Undo Menu:")
             print("1. Undo a field")
-            print("2. Redo a field (WIP)")
+            print("2. Redo a field")
             print("-1. Exit menu")
             try:
                 choice = int(input("Enter choice: "))
@@ -917,7 +917,7 @@ class Edit_node_groups:
         choice = 0
         while choice != -1:
             print("Node list: ",self.view_nodelist())
-            print("Menu")
+            print("Edit Nodes Menu")
             print("Z-Mirror mode: ",self.z_mirror_mode)
             print("1. Edit node values collectively")
             if len(self.edits)==0:
@@ -1026,7 +1026,14 @@ class Truck:
                 print("-1. Exit menu")
             return
             
-        
+    def search_for_beam(self,nodeA,nodeB):
+        beam_index = -1
+        for beam in self.beams:
+            if (beam.nodeA==nodeA and beam.nodeB==nodeB) or (beam.nodeB==nodeA and beam.nodeA==nodeB):
+                beam_index = beam.index
+                break
+        return beam_index
+    
     def read_truck(self):
         f = open(self.file, mode='r')
         lines = f.readlines()
@@ -1066,7 +1073,7 @@ class Truck:
                     print("Reading beams")
                     continue
 
-            break_keywords = ['submesh']
+            #break_keywords = ['submesh']
             
             if l[0].isalpha() and readl:
                 # TODO: check for and read keywords!
@@ -1096,14 +1103,18 @@ class Truck:
                     #    readl = False
                     #    continue
 
-                find_key = False
-                for i in break_keywords:
-                    if l.find(i)!=-1:
-                        find_key = True
-                        break
-                if find_key == True:
+                if l.find(',')<0:
                     readl = False
                     continue
+                
+##                find_key = False
+##                for i in break_keywords:
+##                    if l.find(i)!=-1:
+##                        find_key = True
+##                        break
+##                if find_key == True:
+##                    readl = False
+##                    continue
             if readl:
                 l = l.split(",")
                 if nodes2:
@@ -1130,12 +1141,13 @@ class Truck:
                     nodeA_id = self.get_numeric_node_index(nodeA)
                     nodeB_id = self.get_numeric_node_index(nodeB)
                     if nodeA_id<0 or nodeB_id<0:
-                        print("Error in recognizing beams line")
-                        
-                    else:
+                        print("Error in recognizing beams line ",lnum)
+                    elif self.search_for_beam(nodeA_id,nodeB_id)>-1:
+                        print("Redundant beam. Ignoring line ",lnum)
+                    else:                        
                         new_beam = Beam(len(self.beams),self.index,nodeA_id,nodeB_id,opt)
                         self.beams.append(new_beam)
-                    print("New beam at line ",lnum,": ",new_beam.display_beam())
+                        print("New beam at line ",lnum,": ",new_beam.display_beam())
                 else:
                     try:
                         num = int(l[0])
@@ -1525,7 +1537,7 @@ class Truck:
         
         choice = 0
         while choice !=-1 and len(nodelist)>1:
-            print("Options Menu - select an option to toggle it:")
+            print("View Options Menu - select an option to toggle it:")
             print("1. Show beams - ",opt_show_beams)
             if not all_nodes:
                 print("2. Renumber nodes - ",opt_renum)
@@ -1604,7 +1616,7 @@ class Truck:
         
         choice = 0
         while choice !=-1:
-            print("Options Menu - select an option to toggle it:")
+            print("View Options Menu - select an option to toggle it:")
             print("1. Show nodes - ",opt_show_nodes)
             if not all_beams:
                 print("2. Renumber nodes - ",opt_renum)
@@ -1895,7 +1907,7 @@ class Truck:
                     print("Returning to menu")
                     return
             else:
-                print("Menu:")
+                print("Edit Group Menu:")
                 print("1. Create a new node edit group")
                 print("2. Select a node edit group to edit")
                 print("-1. Exit")
@@ -2038,7 +2050,7 @@ class Truck:
         f_line_mid =  " 0, 0, 0, f, -1, 0,"
         f_line1 += f_line_mid
         f_line2 += f_line_mid
-        option = input("Enter flare size to set or any non-number for invisible flare: ")
+        option = input("Enter flare size to set or any value less or equal to 0.001 for invisible flare: ")
         try:
             flare_size = Decimal(option)
             if flare_size<0.001:
@@ -2211,7 +2223,7 @@ def menu():
     global n, truckfiles
     option = 0
     while option != -1:
-        print("Menu:")
+        print("Main Menu:")
         print("1. Open a .truck file")
         if n>0:
             print("2. Select .truck file for operations")
@@ -2275,9 +2287,9 @@ def menu():
     return
 
 #main code
-print("truck-operations.py - Version 0.1")
+print("truck-operations.py - Version 0.1.1")
 print("Author: Ra1pid")
 option = input("Press enter to continue, or enter info for more information\n")
 if option.find("info")>-1:
-    print("Made as a tool for various operations on .truck files for RoR.\nI originally developed this for my Small Forest Rally project, to convert the trees in Blender to coordinates for the map.\n\nNavigation through the menus is like this:\nX. *desired option*\nEnter choice: X\nHope this tool works for you\n- Ra1pid\n")
+    print("Made as a tool for various operations on .truck files for RoR.\nI originally developed this for my Small Forest Rally project, to convert the trees in Blender to coordinates for the map.\n\nNavigation through the menus is like this:\nX. *desired option*\nEnter choice: X\nDocumentation for each function can be found in program-functionality.txt.\nHope this tool works for you\n- Ra1pid\n")
 menu()

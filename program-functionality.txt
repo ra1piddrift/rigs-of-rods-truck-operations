@@ -1,0 +1,140 @@
+[Program Functionality of truck-operations.py]
+Some documentation for each function of this program.
+Thank God!
+~ Ra1pid
+
+[Version]: 0.1.1
+
+[Update Description]
+	- fixed reading false beams (occurs in [OPENTRUCK])
+	- reworded prompt to get flare size - [HEADFLARES]
+	- now removes redundant beams (occurs in [OPENTRUCK])
+	- added documentation for functions in [Main Menu]
+
+[Function List, by menus]
+
+- [Main Menu]
+	- 1. Open a .truck file - [OPENTRUCK]
+	- 2. Select a .truck file for operations - [SELECTTRUCK]
+	- 101. Create new torquecurve - [TORQCURVE]
+
+- [Truck File Menu] from [SELECTTRUCK]
+	- 1. View data groups - [VIEWDATA]
+	- 2. Edit nodes menu - [EDITNODES]
+	- 51. Auto-create headlight flares - [HEADFLARES]
+	- 101. Convert nodes to map coordinates - .tobj format - [TRUCK2TOBJ]
+
+- [Edit Group Menu] from [EDITNODES]
+	- 1. Create a new edit group - [NEWEDITGRP]
+	- 2. Select a node edit group to edit - [SELECTEDITGRP]
+
+- [Edit Nodes Menu] from [SELECTEDITGRP]
+	- 1. Edit node values collectively - [EDITNODES]
+	- 2. Change list of nodes in edit group (WIP) - UNFINISHED
+	- 3. Toggle Z-Mirror mode - [Z-MIRROR]
+	- 4. View edit history & undo menu - [EDITNODESHISTORY]
+	- 5. Show current node values - [SHOWEDITNODES]
+
+- [Undo Menu] from [EDITNODESHISTORY]
+	- 1. Undo a field - [UNDONODESEDIT]
+	- 2. Redo a field - [REDONODESEDIT]
+
+[Function Descriptions]
+
+[OPENTRUCK]
+[Function]: Opens up a vehicle file based on file name given
+[Location]: [Main Menu]
+[Function Availability]: All the time
+[How to Use]
+When the following prompt is given:
+
+	Enter .truck file name to open:
+
+It asks for the user to enter in the filename of the RoR vehicle file that must be located in the same folder as the script that is running. Here is an example of an input:
+
+	Enter .truck file name to open: example.truck
+
+	(When example.truck is in the same folder as the truck-operations.py that is running.)
+
+If the file doesn't have a .truck file extension, it will ask for confirmation on whether or not to read the file. Enter 'yes' to read the file, or anything else to not read it.
+
+If the program is able to read the file, it will display a line like this, before returning to the [Main Menu]:
+
+	Added  example.truck  at position  X
+
+X represents the position number of the .truck file.
+
+If the file couldn't be located or there was an error in reading it, this error message will be displayed, before returning to [Main Menu]:
+
+	File not found or error in reading file
+
+Make sure that the vehicle file is in the same folder as the instance of truck-operations.py that you are running, and that the file isn't corrupted.
+[Video Tutorials]: https://www.youtube.com/watch?v=EX5QQ1qXWwM&pp=0gcJCccJAYcqIYzv
+
+[SELECTTRUCK]
+[Function]: Selects an opened vehicle file to conduct operations on
+[Location]: [Main Menu]
+[Function Availability]: When at least 1 vehicle file is opened up
+[How to Use]
+The following lines will be displayed at the beginning:
+
+	.truck files currently open:
+	...
+	X   example.truck
+	...
+	Enter position of .truck file to open:
+
+X stands for the position of the corresponding vehicle file that is opened up. The first opened up file will start at 0, the next at 1 and so on. To select the file you want to conduct operations on, enter the corresponding position number in the prompt to select it. You will then be directed to the [Truck File Menu].
+
+If you enter a value above or below the available range (0 to n-1, where n is the number of vehicle files opened up), or any other non-integer value, you will get an 'Out of bounds' error and it will return to the [Main Menu].
+[Video Tutorials]: https://www.youtube.com/watch?v=EX5QQ1qXWwM&pp=0gcJCccJAYcqIYzv
+
+[TORQCURVE]
+[Function]: Creates a new torquecurve based on a list of rpm to current torque ratios
+[Location]: [Main Menu]
+[Function Availability]: All the time
+[How to Use]
+The following text will be displayed:
+
+	Enter lines for torquecurve in such a manner:
+	rpm,current_torque
+	Enter STOP to stop lines
+
+To enter the values to create a torquecurve for RoR, enter each line in this format:
+	
+	rpm,current_torque
+	
+	E.g: 1000,200  
+		-> 1000 = current rpm, 200 = torque at specified rpm
+
+You may also paste a block of lines in such a format.
+If a line couldn't be recognized, the program will throw this error:
+
+	Error reading line!
+
+Make sure to give (positive) integer values for rpm and current_torque values for each line to allow the program to read it.
+
+Once you've entered all the lines you want for the torquecurve, enter 'STOP' to continue.
+The next display will ask for the output choice:
+
+	Choose method for output:
+	1. Console
+	2. Output.txt file
+	Any other output will result in console display
+	Enter choice:
+
+Enter 2 for the program to write to the file 'Output.txt' in the same folder, or any other input for displaying on the console. 
+
+The displayed text will be in this format:
+
+	Max torque: max_torque
+	torquecurve
+	...
+	rpm,current_torque_to_max_torque_ratio
+	...
+
+'max_torque' can be placed in the 'torque' field of the 'engine' section of a vehicle file. The rest of the text can be transferred underneath the same section.
+After displaying, the program will return back to [Main Menu].
+[Video Tutorials]: -
+
+More documentation coming soon...
