@@ -2,9 +2,13 @@
 
 **Small Python-scripted Rigs of rods .truck file editor.**
 
+**Current Version: 0.2**
+
 A simple WIP Python console program to make various operations on a .truck or other Rigs of Rods vehicle file.
 Made originally to create trees for the Small Forest Rally (SMFOR) map.  
 This program is highly experimental and unfinished, so make sure to keep backups of your files before using this.
+
+
 
 ## To Run Script
 
@@ -24,7 +28,13 @@ Enter 'info' in the first prompt for basic menu navigation help.
 
 ## Documentation
 
-Read program-functionality.txt for explanations of each function in the program. Currently unfinished.
+Read program-functionality.txt for explanations of each function in the program. Check the date of release of the file for the latest version. Currently unfinished.
+
+
+
+## Troubleshooting Errors
+
+If you run into problems during runtime of the program, check program-functionality.txt to see if that part of the program has documentation that might help you. Currently, if there are errors that cause the program to close unexpectedly, no error logs will be generated. If you can't fix the issue, you may send an e-mail to raiderrapherra1pider@gmail.com with your vehicle file(s) you loaded and the input you entered before it crashed. I will try to look into it and remedy the issue.
 
 
 

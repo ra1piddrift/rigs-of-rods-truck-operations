@@ -44,41 +44,62 @@ class Node:
         self.node = True
         self.index = n_index
         self.edit_group = []
+        #node_type = 2 -> wheel node
+        if node_type == 2:
+            self.wheel_node = True
+            self.al_index = ""
+            self.wheelid = -1
         #node_type = 1 -> nodes2
-        if node_type == 1:
-            
+        elif node_type == 1:
+            self.wheel_node = False
             self.al_index = al_num
             
         #node_type = 0 -> nodes
         else:
+            self.wheel_node = False
             self.al_index = ""
-        try:
-            self.x = Decimal(node_line[0])
-            self.y = Decimal(node_line[1])
-            self.z = Decimal(node_line[2])
-        except:
-            print("Error reading node ",n_index," ",self.al_index)
-            self.node = False
-        self.weight = Decimal(-1)
-        self.z_mirror = []
-        self.duplicates = []
-        if len(node_line)>3:
-            options = node_line[3].lstrip().split(" ")
-            if len(options)>1:
-                try:
-                    self.weight = Decimal(options[1])
-                except:
-                    print("Error with recognizing weight for node ",n_index)
-                    self.weight = Decimal(-1)
 
-            self.node_opt = options[0] 
-        else:            
-            self.node_opt = ""
+        if node_type<2:
+            try:
+                self.x = Decimal(node_line[0])
+                self.y = Decimal(node_line[1])
+                self.z = Decimal(node_line[2])
+            except:
+                print("Error reading node ",n_index," ",self.al_index)
+                self.node = False
             self.weight = Decimal(-1)
 
+            if len(node_line)>3:
+                options = node_line[3].lstrip().split(" ")
+                if len(options)>1:
+                    try:
+                        self.weight = Decimal(options[1])
+                    except:
+                        print("Error with recognizing weight for node ",n_index)
+                        self.weight = Decimal(-1)
+
+                self.node_opt = options[0] 
+            else:            
+                self.node_opt = ""
+                self.weight = Decimal(-1)
+
+            
+        #else:
+            
+            
+        self.z_mirror = []
+        self.duplicates = []
         self.node_opt_initial = "unmodified"
 
+    def set_wheel_id(self,w_id):
+        if self.wheel_node:
+            self.wheelid = w_id
+        return
+    
     def display_node(self,renum=False):
+        if self.wheel_node:
+            return ";wheel node "+str(self.index)+" of wheel "+str(self.wheelid)
+        
         if renum:
             line = ""
         else:  
@@ -102,15 +123,19 @@ class Node:
         ret_list.append("Node "+str(self.get_index()))
         if not self.nodes_or_nodes2():
             ret_list.append("Numerical Index: "+str(self.index))
-        ret_list.append("Coordinates: "+str(self.x)+", "+str(self.y)+", "+str(self.z))
-        if len(self.z_mirror)>0:
-            ret_list.append("Z-Mirror Nodes (numerical index only): "+str(self.z_mirror))
-        if len(self.duplicates)>0:
-            ret_list.append("Duplicate Nodes (numerical index only): "+str(self.duplicates))
-        if self.node_opt != "":
-            ret_list.append("Node Options: "+self.node_opt)
-        if self.weight>Decimal(-1):
-            ret_list.append("Node Weight (specified in line): "+str(self.weight))
+
+        if self.wheel_node:
+            ret_list.append("Wheel node of wheel "+str(self.wheelid))
+        else:        
+            ret_list.append("Coordinates: "+str(self.x)+", "+str(self.y)+", "+str(self.z))
+            if len(self.z_mirror)>0:
+                ret_list.append("Z-Mirror Nodes (numerical index only): "+str(self.z_mirror))
+            if len(self.duplicates)>0:
+                ret_list.append("Duplicate Nodes (numerical index only): "+str(self.duplicates))
+            if self.node_opt != "":
+                ret_list.append("Node Options: "+self.node_opt)
+            if self.weight>Decimal(-1):
+                ret_list.append("Node Weight (specified in line): "+str(self.weight))
         
         return ret_list.copy()
     
@@ -157,8 +182,14 @@ class Node:
 
     def get_duplicates(self):
         return self.duplicates.copy()
+
+    def normal_or_wheel_node(self):
+        return not self.wheel_node
     
     def edit_node(self,field,value,mirror=False):
+        if self.wheel_node:
+            return
+        
         match(field):
             case('x'):
                 self.x+=value
@@ -209,6 +240,9 @@ class Node:
         return
 
     def undo_edit(self,field,value="NONE",mirror=False):
+        if self.wheel_node:
+            return
+        
         match(field):
             case('x'):
                 self.x-=value
@@ -293,9 +327,10 @@ class Edit_node_groups:
         self.truck_index = t_index
         self.z_mirror_mode = False
         self.z_mirror_nodes = []
-        for i in self.edit_nodes:
-            truckfiles[self.truck_index].nodes[i].edit_group.append(self.index)
-        print("Created Node Edit group at position ",self.index)
+        if len(self.edit_nodes)>0:                
+            for i in self.edit_nodes:
+                truckfiles[self.truck_index].nodes[i].edit_group.append(self.index)
+            print("Created Node Edit group at position ",self.index)
 
     def view_nodelist(self):
         l_str = "["
@@ -310,7 +345,90 @@ class Edit_node_groups:
     def add_desc(self,info):
         self.desc = info
         return
-    
+
+    def read_from_file(self,line_list):
+        def extract_list(line):
+            start = line.find('[')
+            end = line.find(']')
+            if start<0 or end<0 or start>end:
+                return [False]
+            l = line[start+1:end].split(',')
+            return l.copy()
+        
+        for i in range(len(line_list)):
+            if i>0:
+                #print(line_list[i])
+                if line_list[i].find('Nodes:')>-1:
+                    
+                    n_list = extract_list(line_list[i])
+                    if n_list[0] is False:
+                        print("Error reading edit group!")
+                        return
+                    try:
+                        for j in range(len(n_list)):
+                            n_list[j] = int(n_list[j])
+                    except:
+                        print("Error reading edit group!")
+                        return
+                    self.edit_nodes = n_list.copy()
+                    try:
+                        for j in self.edit_nodes:
+                            truckfiles[self.truck_index].nodes[j].edit_group.append(self.index)
+                    except:
+                        print("Error reading edit group!")
+                        return
+                elif line_list[i].find('Z-mirror:')>-1:
+                    if len(self.edit_nodes)==0:
+                        continue
+                    temp = line_list[i].split(':')
+                    if temp[1].find('ON')>-1:
+                        self.toggle_z_mirror()
+                elif line_list[i].find('x:')>-1:
+                    if len(self.edit_nodes)==0:
+                        continue
+                    x_list = extract_list(line_list[i])
+                    if x_list[0] is False or len(x_list)==0:
+                        continue
+                    try:
+                        self.create_edit('x',Decimal(x_list[0]),True)
+                    except:
+                        print("Error in reading x value edit!")
+                        continue
+                elif line_list[i].find('y:')>-1:
+                    if len(self.edit_nodes)==0:
+                        continue
+                    y_list = extract_list(line_list[i])
+                    if y_list[0] is False or len(y_list)==0:
+                        continue
+                    try:
+                        self.create_edit('y',Decimal(y_list[0]),True)
+                    except:
+                        print("Error in reading y value edit!")
+                        continue
+                elif line_list[i].find('z:')>-1:
+                    if len(self.edit_nodes)==0:
+                        continue
+                    z_list = extract_list(line_list[i])
+                    if z_list[0] is False or len(z_list)==0:
+                        continue
+                    try:
+                        self.create_edit('z',Decimal(z_list[0]),True)
+                    except:
+                        print("Error in reading z value edit!")
+                        continue
+                elif line_list[i].find('opt:')>-1:
+                    print("Unable to undo option edits; not reading")
+                    continue
+                elif line_list[i].find('weight:')>-1:
+                    print("Unable to undo weight edits; not reading")
+                    continue
+                else:
+                    self.add_desc(line_list[i])
+            
+
+            
+        print("Created Node Edit group at position ",self.index)        
+        return
 
     def toggle_z_mirror(self):
         def set_mirror_mode(status):
@@ -388,7 +506,26 @@ class Edit_node_groups:
                     print("Invalid choice")
 
         return
-    def create_edit(self,field,value):
+    def create_edit(self,field,value,read=False):
+        def append_edit(f,v):
+            if len(self.edits)==0:
+                edit_line = [f,v]
+                self.edits.append(edit_line)
+            else:
+                check = False
+                for i in range(len(self.edits)):
+                    if self.edits[i][0]==f:
+                        self.edits[i].append(v)
+                        check = True
+                        break
+                if check is False:
+                    edit_line = [f,v]
+                    self.edits.append(edit_line)
+            return
+        if read:
+            append_edit(field,value)
+            return
+                
         match(field):
             case('x'):
                 #DO SOMETHING!
@@ -436,19 +573,7 @@ class Edit_node_groups:
             field = 'opt'
         
         
-        if len(self.edits)==0:
-            edit_line = [field,value]
-            self.edits.append(edit_line)
-        else:
-            check = False
-            for i in range(len(self.edits)):
-                if self.edits[i][0]==field:
-                    self.edits[i].append(value)
-                    check = True
-                    break
-            if check is False:
-                edit_line = [field,value]
-                self.edits.append(edit_line)
+        append_edit(field,value)
         print("Added new edit")
         
         if len(self.undo_edits)>0:
@@ -540,7 +665,7 @@ class Edit_node_groups:
                     case(1):
                         print("List of possible option values: ",opt_list)
                         print("To add a value to options, type those values without spaces")
-                        print("E.g.: mb - if values aren't already in node's option list, they will be added")
+                        print("E.g.: mb - if values aren't already in node's option list, m and b will be added")
                         raw_add_list = input("Enter values to add to node option lists: ")
                         add_list = ""
                         for i in raw_add_list:
@@ -951,26 +1076,73 @@ class Edit_node_groups:
 
 
 class Truck:
+    
+    class snapshot_sys():
+
+        def __init__(self,t_index):
+            global truckfiles
+            self.truck_index = t_index
+            self.position = ''
+            self.snapshots = []
+
+        def set_state(self,place):
+            for i in ['wheels','wheels2','meshwheels','meshwheels2','flexbodywheels']:
+                if place==i:
+                    place = 'wheels'
+                    break
+            self.position = place
+            return
+
+        def get_snapshot(self):
+            node_count = len(truckfiles[self.truck_index].nodes)
+            beam_count = len(truckfiles[self.truck_index].beams)
+            wheel_count = len(truckfiles[self.truck_index].wheels)
+            return [self.position,node_count,beam_count,wheel_count]
+
+        def save_snapshot(self):
+            sav_snapshot = self.get_snapshot()
+            pos = len(self.snapshots)
+            self.snapshots.append(sav_snapshot)
+            return pos
+
+        def retrieve_snapshot(self,pos):
+            try:
+                return self.snapshots[pos].copy()
+            except:
+                return "not found"
+
+        
+
+
     def __init__(self,fname,t_index):
         self.file = fname
         self.index = t_index
         self.nodes = []
         self.beams = []
-        self.n = 0
+        self.wheels = []
+        self.comments = []
+        #self.n = 0
         self.ready = False
         self.node_edit_groups = []
+        self.data_groups = []
+        self.snapshot_maker = self.snapshot_sys(self.index)
 
     class def_data_grp():
     
-        def __init__(self,index,t_index):
+        def __init__(self,index,t_index,n_list):
             self.index = index
             self.truck_index = t_index
             self.grp_type = "NONE"
+            self.desc = ''
             self.active = True
-            self.n_list = []
+            self.n_list = n_list
             
         def find_type(self):
             return self.grp_type
+
+        def set_type(self,g_type):
+            self.grp_type = g_type
+            return
 
         def check_active(self):
             return self.active
@@ -979,6 +1151,19 @@ class Truck:
             print("No type specified")
             return
 
+        def set_desc(self,d):
+            self.desc = d.rstrip()
+            return
+
+        def display(self):
+            r_str_lst = []
+            r_str_lst.append('Data Group '+str(self.index)+' Details:')
+            r_str_lst.append('Type: '+self.grp_type)
+            if self.desc != '':
+                r_str_lst.append('Description/Name: '+self.desc)
+            r_str_lst.append('Nodelist: '+self.disp_nodelist())
+            return r_str_lst.copy()
+        
         def disp_nodelist(self):
             if len(self.n_list)>0:
                 l_str = "["
@@ -990,7 +1175,7 @@ class Truck:
                 l_str+="]"
                 return l_str
             else:
-                return
+                return ''
                 
 
     class set_node_defaults(def_data_grp):
@@ -1025,6 +1210,153 @@ class Truck:
                 print("2. Edit parameters")
                 print("-1. Exit menu")
             return
+
+
+    class wheel():
+
+        def __init__(self,index,t_index,w_type,line):
+            global truckfiles
+            self.index = index
+            self.truck_index = t_index
+            #self.wheel_type values: 0=wheels, 1=wheels2, 2=meshwheels, 3=meshwheels2, 4=flexbodywheels
+            self.wheel_type = w_type
+            self.line_raw = line
+            #print(self.line_raw)
+            self.active = False
+            #self.w_nodes: 1st value=1st node, Last value=Last node
+            self.w_nodes = [-1,-1]
+            #self.values = []
+            self.node1 = -1
+            self.node2 = -1
+            self.numrays = -1
+            self.evaluate()
+
+        def show_main_nodes(self):
+            return "("+str(self.w_nodes[0])+" to "+str(self.w_nodes[1])+")"
+        
+        def evaluate(self):
+            l = self.line_raw.split(',')
+            check = False
+            for i in range(len(l)):
+                match(self.wheel_type):
+                    case(0): #wheels
+                        match(i):
+                            case(2):
+                                try:
+                                    self.numrays = int(l[i])
+                                except:
+                                    self.numrays = -1
+                                
+                            case(3):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node1 = node_chk
+                            case(4):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node2 = node_chk
+                        if self.numrays>-1 and self.node1>-1 and self.node2>-1:
+                            check = True
+                    case(1): #wheels2
+                        match(i):
+                            case(3):
+                                try:
+                                    self.numrays = int(l[i])
+                                except:
+                                    self.numrays = -1
+                            case(4):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node1 = node_chk
+                            case(5):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node2 = node_chk
+                        if self.numrays>-1 and self.node1>-1 and self.node2>-1:
+                            check = True
+
+                    case(2): #meshwheels
+                        match(i):
+                            case(3):
+                                try:
+                                    self.numrays = int(l[i])
+                                except:
+                                    self.numrays = -1
+                            case(4):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node1 = node_chk
+                            case(5):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node2 = node_chk
+                        if self.numrays>-1 and self.node1>-1 and self.node2>-1:
+                            check = True
+
+                    case(3): #meshwheels2
+                        match(i):
+                            case(3):
+                                try:
+                                    self.numrays = int(l[i])
+                                except:
+                                    self.numrays = -1
+                            case(4):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node1 = node_chk
+                            case(5):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node2 = node_chk
+                        if self.numrays>-1 and self.node1>-1 and self.node2>-1:
+                            check = True
+
+
+                    case(4): #flexbodywheels
+                        match(i):
+                            case(3):
+                                try:
+                                    self.numrays = int(l[i])
+                                except:
+                                    self.numrays = -1
+                            case(4):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node1 = node_chk
+                            case(5):
+                                node_chk = truckfiles[self.truck_index].get_numeric_node_index(l[i])
+                                if node_chk>-1:
+                                    self.node2 = node_chk
+                        if self.numrays>-1 and self.node1>-1 and self.node2>-1:
+                            check = True
+
+                        
+            if check:
+                self.active = True
+                self.activate()
+            else:
+                
+                print("Error reading wheel line")
+                return
+               
+            return
+    
+        def state(self):
+            return self.active
+
+        def activate(self):
+            num_nodes = self.numrays*2
+            first_node = len(truckfiles[self.truck_index].nodes)
+            last_node = first_node+num_nodes
+            
+            self.w_nodes = [first_node,last_node]
+            for i in range(self.w_nodes[0],self.w_nodes[1]):
+                new_node = Node(i,"",2)
+                new_node.set_wheel_id(self.index)
+                truckfiles[self.truck_index].nodes.append(new_node)
+            print("Added new wheel")
+            return
+        
             
     def search_for_beam(self,nodeA,nodeB):
         beam_index = -1
@@ -1043,14 +1375,227 @@ class Truck:
         nodes_keywords = ["set_node_defaults"]
         beams_keywords = ["set_beam_defaults","detacher_group"]
         lnum = -1
+        class read_other_sect():
+            def __init__(self,t_index):
+                global truckfiles
+                self.truck_index = t_index
+                self.recog_keyw = ['wheels', 'wheels2','meshwheels','meshwheels2','flexbodywheels']
+                self.active = False
+                self.keyword = ''
+                self.line = ''
+                
+            def activate(self,mode,keyword = ''):
+                #print("1")
+                if mode is False:
+                    self.active = False
+                    self.keyword = ""
+                else:
+                    check = False
+                    for i in self.recog_keyw:
+                        #print(i," ",keyword)
+                        if i==keyword:
+                            check = True
+                            self.keyword = i
+                            print("Reading ",self.keyword)
+                            break
+                    if check:
+                        self.active = True
+                    else:
+                        self.active = False
+                return
+
+            def state(self):
+                return self.active
+
+            def get_keyword(self):
+                return self.keyword
+            
+            def process(self):
+                if self.active:
+                    match(self.keyword):
+                        case('wheels'):
+                            n_wheel = truckfiles[self.truck_index].wheel(len(truckfiles[self.truck_index].wheels),self.truck_index,0,self.line)
+                            if n_wheel.state():
+                                
+                                truckfiles[self.truck_index].wheels.append(n_wheel)
+                                
+                        case('wheels2'):
+                            n_wheel = truckfiles[self.truck_index].wheel(len(truckfiles[self.truck_index].wheels),self.truck_index,1,self.line)
+                            if n_wheel.state():
+                                
+                                truckfiles[self.truck_index].wheels.append(n_wheel)
+                                
+                        case('meshwheels'):
+                            n_wheel = truckfiles[self.truck_index].wheel(len(truckfiles[self.truck_index].wheels),self.truck_index,2,self.line)
+                            if n_wheel.state():
+                                
+                                truckfiles[self.truck_index].wheels.append(n_wheel)
+                                
+                        case('meshwheels2'):
+                            n_wheel = truckfiles[self.truck_index].wheel(len(truckfiles[self.truck_index].wheels),self.truck_index,3,self.line)
+                            if n_wheel.state():
+                                
+                                truckfiles[self.truck_index].wheels.append(n_wheel)
+                                
+                        case('flexbodywheels'):
+                            n_wheel = truckfiles[self.truck_index].wheel(len(truckfiles[self.truck_index].wheels),self.truck_index,4,self.line)
+                            if n_wheel.state():
+                                
+                                truckfiles[self.truck_index].wheels.append(n_wheel)
+                                
+                                                
+                return
+            
+            def receive(self,read_line):
+                self.line = read_line
+                #Process the line!
+                self.process()
+                return
+            
+            
+        other_sect = read_other_sect(self.index)
+
+        class comment_manager():
+
+            def __init__(self,t_index):
+                global truckfiles
+                self.truck_index = t_index
+                self.comments_read = []
+                self.comments_pending = []
+                #self.position = ['begin']
+                self.grp_counter = -1
+
+            def read_comment(self,com):
+                self.comments_read.append(com)
+                print("Reading comment in ",truckfiles[self.truck_index].snapshot_maker.position)
+                truckfiles[self.truck_index].comments.append([com,truckfiles[self.truck_index].snapshot_maker.get_snapshot()])
+                self.recognize()
+                return
+
+            def realize_comment(self,sect_type):
+                if sect_type=='all':
+                    #print('2')
+                    pos = len(self.comments_pending)-1
+                    if self.comments_pending[pos][0][0].find('grp:')>-1:
+                        #print('3')
+                        sect_type = 'grp:'
+                    elif self.comments_pending[pos][0][0].find('Edit Group')>-1:
+                        #print('4')
+                        sect_type = 'Edit Group'
+                else:
+                    pos = -1
+                    for i in range(len(self.comments_pending)):
+                        #print(self.comments_pending[i][0][0])
+                        if self.comments_pending[i][0][0].find(sect_type)>-1:
+                            pos = i
+                            break
+                if pos>-1:
+                    #Do something!
+                    finish_com = self.comments_pending.pop(pos)
+                    #print('finish_com: ',finish_com)
+                    old_snapshot = truckfiles[self.truck_index].snapshot_maker.retrieve_snapshot(finish_com[1])
+                    cur_snapshot = truckfiles[self.truck_index].snapshot_maker.get_snapshot()
+                    match(sect_type):
+                        case('grp:'):
+                            first_node = old_snapshot[1]
+                            last_node = cur_snapshot[1]-1
+                            nodelist = []
+                            for i in range(first_node,last_node+1):
+                                nodelist.append(i)
+                            new_data_grp = truckfiles[self.truck_index].def_data_grp(len(truckfiles[self.truck_index].data_groups),self.truck_index,nodelist.copy())
+                            #print(finish_com)
+                            new_data_grp.set_desc(finish_com[0][1])
+                            new_data_grp.set_type('grp:')
+                            if new_data_grp.check_active():
+                                truckfiles[self.truck_index].data_groups.append(new_data_grp)
+                                print("grp: recognized")
+                        case('Edit Group'):
+                            #print('5')
+                            new_edit_grp = Edit_node_groups(len(truckfiles[self.truck_index].node_edit_groups),self.truck_index)
+                            new_edit_grp.read_from_file(finish_com[0].copy())
+                            if len(new_edit_grp.edit_nodes)>0:
+                                truckfiles[self.truck_index].node_edit_groups.append(new_edit_grp)
+                            
+                        
+            
+                return
+
+            def recognize(self):
+                def recog_line(line):
+                    #print(line)
+                    #print(line.find('Edit Group'))
+                    r_line = []
+                    if line.find('grp:')>-1:
+                        temp = line.split(':')
+                        r_line = ['grp:',temp[1]]
+                        #print(r_line)
+                    elif line.find('Edit Group')>-1:
+                        r_line = line.split('|')
+                        r_line[0] = 'Edit Group'
+                        #print(r_line)
+                    return r_line.copy()
+
+                
+                cur_comment = recog_line(self.comments_read[len(self.comments_read)-1])
+                #print(cur_comment)
+                if len(cur_comment)>0:
+                    
+                    match(cur_comment[0]):
+                        case('grp:'):
+                            #print("comments pending: ",len(self.comments_pending))
+                            if len(self.comments_pending)>0:
+                                #print("2")
+                                self.realize_comment(cur_comment[0])
+                                    
+                            #print("1")
+                            snapshot_pos = truckfiles[self.truck_index].snapshot_maker.save_snapshot()
+                            self.comments_pending.append([cur_comment.copy(),snapshot_pos])
+
+                        case('Edit Group'):
+                            #print('6')
+                            self.comments_pending.append([cur_comment.copy(),-1])
+                    
+                return
+
+            def finish_up(self):
+                while len(self.comments_pending)>0:
+                    #print('1')
+                    self.realize_comment('all')
+                print("Finished reading comments")
+                return
+            
+        com_manage = comment_manager(self.index)
+
+        def get_position():
+            nonlocal readl, nodes2, beams, other_sect
+            #print(other_sect.state())
+            if readl:
+                if not nodes2 and not beams:
+                    self.snapshot_maker.set_state('nodes')
+                elif nodes2 and not beams:
+                    self.snapshot_maker.set_state('nodes2')
+                elif not nodes2 and beams:
+                    self.snapshot_maker.set_state('beams')
+            elif other_sect.state():
+                self.snapshot_maker.set_state(other_sect.get_keyword())
+            else:
+                self.snapshot_maker.set_state('unidentified')
+            return
+        
         for l in lines:
             lnum += 1
             l = l.lstrip()
             end_at = l.find(";")
+            if end_at==0:
+                com_manage.read_comment(l)
+                continue
             l = l[:end_at]
             if l == "":
                 continue
+            
+
             if l[0].isalpha():
+                #print(l," at ",lnum)
                 nodes_check = l=="nodes"
                 nodes2_check  = l=="nodes2"
                 beams_check = l=="beams"
@@ -1059,72 +1604,94 @@ class Truck:
                     nodes2 = True
                     beams = False
                     print("Reading nodes2")
+                    #self.snapshot_maker.set_state('nodes')
                     continue
                 elif nodes_check:
                     readl = True
                     nodes2 = False
                     beams = False
                     print("Reading nodes")
+                    #self.snapshot_maker.set_state('nodes')
                     continue
                 elif beams_check:
                     readl = True
                     nodes2 = False
                     beams = True
                     print("Reading beams")
+                    #self.snapshot_maker.set_state('beams')
                     continue
 
-            #break_keywords = ['submesh']
-            
-            if l[0].isalpha() and readl:
-                # TODO: check for and read keywords!
-                if beams:
-                    find_key = False
-                    for i in beams_keywords:
-                        if l.find(i)!= -1:
-                            find_key = True
-                            break
-                    if find_key == True: 
-                        continue
+                if nodes2_check or nodes_check or beams_check:
+                    other_sect.activate(False)
                     
-                    #else:
-                    #    readl = False
-                    #    continue
-                else:
-                    #print("2")
-                    find_key = False
-                    for i in nodes_keywords:
-                        if l.find(i)!= -1:
-                            find_key = True
-                            break
-                    if find_key == True:
-                        #print("Found")
+                elif l.find(',')<0:
+                    #readl = False
+                    other_sect.activate(True,l.strip())
+                    if other_sect.state():
+                        
+                        readl = False
+                        get_position()
+                        #self.snapshot_maker.set_state(other_sect.get_keyword())
                         continue
-                    #else:
-                    #    readl = False
-                    #    continue
+                    #elif not nodes2_check or not nodes_check or not beams_check:
+                        #self.snapshot_maker.set_state('unidentified')
 
-                if l.find(',')<0:
-                    readl = False
+            if l[0].isalpha() and (readl or other_sect.state()):
+                #print("2")
+                # TODO: check for and read keywords!
+                #if beams:
+                find_key = False
+                for i in beams_keywords:
+                    #print(l," match with ",i)
+                    if l.find(i)!= -1:
+                        find_key = True
+                        break
+                if find_key == True:
+                    #print(1)
                     continue
                 
-##                find_key = False
-##                for i in break_keywords:
-##                    if l.find(i)!=-1:
-##                        find_key = True
-##                        break
-##                if find_key == True:
-##                    readl = False
-##                    continue
+                #else:
+                #print("2")
+                find_key = False
+                for i in nodes_keywords:
+                    if l.find(i)!= -1:
+                        find_key = True
+                        break
+                if find_key == True:
+                    #print("Found")
+                    continue
+
+                #print(l," at ",lnum)
+                #When a new section is read
+                #print("l.find: ",l.find(','))
+                if l.find(',')<0:
+                    readl = False
+                    #self.snapshot_maker.set_state('unidentified')
+                    other_sect.activate(True,l)
+                    get_position()
+                    #print("2 readl = ",readl)
+                    continue
+                    
+
+            if other_sect.state() and not readl:
+                other_sect.receive(l)
+                get_position()
+                continue
+            #print(l," at ",lnum)
+            
+                
+
+            
             if readl:
                 l = l.split(",")
                 if nodes2:
                     #print(l)
                     al_num = l[0]
                     #nodes2 -> 3rd parameter = 1
-                    new_node = Node(self.n,l[1:],1,al_num)
+                    new_node = Node(len(self.nodes),l[1:],1,al_num)
                     if new_node.node:
                         self.nodes.append(new_node)
-                        self.n+=1
+                            #self.n+=1
                     else:
                         print("Skipping nodes2 line")
                     True
@@ -1148,27 +1715,38 @@ class Truck:
                         new_beam = Beam(len(self.beams),self.index,nodeA_id,nodeB_id,opt)
                         self.beams.append(new_beam)
                         print("New beam at line ",lnum,": ",new_beam.display_beam())
+                        #com_manage.set_state('beams',new_beam.index)
                 else:
                     try:
                         num = int(l[0])
-                        if num==self.n:
+                        if num==len(self.nodes):
                             #nodes -> 3rd parameter = 0
                             new_node = Node(num,l[1:],0)
                             if new_node.node == False:
                                 del new_node
                                 placeholder = Node(num,["0","0","0"],0)
                                 self.nodes.append(placeholder)
-                                print("Added placeholder for node ",self.n)
+                                print("Added placeholder for node ",len(self.nodes))
                             else:
                                 self.nodes.append(new_node)
-                            self.n += 1
+                            #com_manage.set_state('nodes',new_node.index)
+                            #self.n += 1
                     except:
                         print("Error reading line")
 
+            #else:
+                #print(l)
+            get_position()
+            
+        com_manage.finish_up()    
         if len(self.nodes)>0:
             self.ready = True
             print("Node count: ",len(self.nodes))
             print("Beam count: ",len(self.beams))
+            print("Wheel count: ",len(self.wheels))
+            print("Comment count: ",len(self.comments))
+            if len(self.node_edit_groups)>0:
+                print("Edit groups read: ",len(self.node_edit_groups))
             self.find_mirrors_duplicates()
             return True
         else:
@@ -1176,7 +1754,13 @@ class Truck:
     def find_mirrors_duplicates(self):
         print("Node mirrors and duplicates will be identified according to numerical index")
         for i in self.nodes:
+            if i.wheel_node:
+                continue
+            
             for j in self.nodes:
+                if j.wheel_node:
+                    continue
+                
                 if i.index == j.index:
                     continue
                 x_chk = i.x == j.x
@@ -1238,7 +1822,7 @@ class Truck:
                         last_ind = int(last)
                     except:
                         continue
-                if first_ind>=last_ind or first_ind<0 or last_ind<0 or first_ind>=self.n or last_ind>=self.n:
+                if first_ind>=last_ind or first_ind<0 or last_ind<0 or first_ind>=len(self.nodes) or last_ind>=len(self.nodes):
                     continue
                 else:
                     #TODO: Add range to edit_grp (each node index one by one)
@@ -1255,7 +1839,7 @@ class Truck:
                     except:
                         continue
 
-                if i_ind<0 or i_ind>=self.n:
+                if i_ind<0 or i_ind>=len(self.nodes):
                     continue
                 else:
                     nodelist.append(i_ind)
@@ -1460,6 +2044,10 @@ class Truck:
             print("Choose method to display: ")
             print("1. Using selection of nodes or a single node")
             print("2. Using selection of beams or a single beam")
+            if len(self.wheels)>0:
+                print("3. View wheels")
+            if len(self.data_groups)>0:
+                print("4. View data groups")
             print("-1. Exit")
             try:
                 choice = int(input("Enter choice: "))
@@ -1470,11 +2058,92 @@ class Truck:
                     self.view_by_nodes()
                 case (2):
                     self.view_by_beams()
+                case (3) if len(self.wheels)>0:
+                    self.view_wheels()
+                case (4) if len(self.data_groups)>0:
+                    self.view_data_groups()
                 case (-1):
                     print("Exiting")
                 case _:
                     print("Invalid choice")
 
+        return
+
+    def view_data_groups(self):
+        if len(self.data_groups)==0:
+            return
+
+        choice = -1
+        print("Data Group List")
+        for i in self.data_groups:
+            p_str = str(i.index)+" - "+i.find_type()
+            if i.desc != '':
+                p_str += " - "+i.desc
+            else:
+                p_str += " Nodelist: "+i.disp_nodelist()
+            print(p_str)
+        try:
+            choice = int(input("Enter index no. of data group to view: "))
+        except:
+            choice = -1
+        if choice>-1 and choice<len(self.data_groups):
+            data_grp_disp_lst = self.data_groups[choice].display()
+            nodelist = self.data_groups[choice].n_list.copy()
+            view_nodes = input("Do you wish to view node and/or beam data?\nEnter y to show, or anything else to not display: ")
+            if view_nodes=='y':
+                opt_show_beams = False
+                opt_renum = False
+                
+                opt = 0
+                while opt !=-1:
+                    print("View Options Menu - select an option to toggle it:")
+                    print("1. Show beams - ",opt_show_beams)
+                    print("2. Renumber nodes - ",opt_renum)
+                    print("Anything else: Continue to display")
+                    try:
+                        choice = int(input("Enter choice: "))
+                    except:
+                        choice = 0
+                    match(choice):
+                        case (1):
+                            opt_show_beams = not opt_show_beams
+                        case (2):
+                            opt_renum = not opt_renum
+                        case _:
+                            opt = -1
+                            print("Continuing to display\n")
+            for i in data_grp_disp_lst:
+                print(i)
+            if view_nodes=='y':
+                self.display_manager("NODES",False,opt_show_beams,opt_renum,nodelist)
+        else:
+            print("Returning to menu")
+
+        return
+    
+    def view_wheels(self):
+        if len(self.wheels)==0:
+            return
+        
+        #choice = 0
+        print("Wheel List: ")
+        print("Ind. - (First_Node to Last_Node) - Wheel Type")
+        for i in self.wheels:
+            w_type = 'wheels'
+            match(i.wheel_type):
+                case(0):
+                    w_type = 'wheels'
+                case(1):
+                    w_type = 'wheels2'
+                case(2):
+                    w_type = 'meshwheels'
+                case(3):
+                    w_type = 'meshwheels2'
+                case(4):
+                    w_type = 'flexbodywheels'
+                    
+            print(i.index," - ",i.show_main_nodes()," - ",w_type)
+        print("More data to be collected in future updates")
         return
 
     def view_by_nodes(self):
@@ -1496,8 +2165,8 @@ class Truck:
             case(1):
                 all_nodes = True
             case(2):
-                print("Total number of nodes: ",self.n)
-                print("Last node index: ",self.n-1)
+                print("Total number of nodes: ",len(self.nodes))
+                print("Last node index: ",len(self.nodes)-1)
                 nodelist_str = input("List nodes to view collectively:\nUse - to denote ranges and , to distinguish between nodes and ranges\nE.g. 0,9-23,44\nEnter line: ")
                 if len(nodelist_str)==0:
                     print("No input! Returning")
@@ -1536,7 +2205,7 @@ class Truck:
         opt_renum = False
         
         choice = 0
-        while choice !=-1 and len(nodelist)>1:
+        while choice !=-1 and (len(nodelist)>1 or all_nodes):
             print("View Options Menu - select an option to toggle it:")
             print("1. Show beams - ",opt_show_beams)
             if not all_nodes:
@@ -1692,13 +2361,14 @@ class Truck:
                 n_list = self.nodes[datalist[0]].display_metadata()
             else:
                 n_list = self.display_nodes(opt_renum,datalist)
-        elif opt_show_cmplmnt_data:
+        elif opt_show_cmplmnt_data or opt_renum:
             if all_data:
                 n_list = self.display_nodes(False)
             #FIND NODES MENTIONED IN BEAMS!!
             else:
                 nodelist = self.find_nodes_from_beams(datalist)
-                n_list = self.display_nodes(opt_renum,nodelist)
+                if opt_show_cmplmnt_data:
+                    n_list = self.display_nodes(opt_renum,nodelist)
                 
 
         #Show beams
@@ -1852,9 +2522,9 @@ class Truck:
                     else:
                         node_B = -1
 
-                    print(node_A," ",node_B)
+                    #print(node_A," ",node_B)
                     k = self.beams[i].display_beam(node_A,node_B)
-                    print(k)
+                    #print(k)
                     ret_list.append(k)
 
         else:
@@ -1877,8 +2547,8 @@ class Truck:
         return ret_list.copy()
     
     def create_new_edit_grp(self):
-        print("Total number of nodes: ",self.n)
-        print("Last node index: ",self.n-1)
+        print("Total number of nodes: ",len(self.nodes))
+        print("Last node index: ",len(self.nodes)-1)
         edit_grp_str = input("List nodes to edit collectively:\nUse - to denote ranges and , to distinguish between nodes and ranges\nE.g. 0,9-23,44\nEnter line: ")
         if len(edit_grp_str)==0:
             print("No input! Returning")
@@ -1894,6 +2564,26 @@ class Truck:
         if len(min_edit_grp)==0:
             print("Error in reading input line")
             return
+        ignore_wheel_nodes = []
+        for i in min_edit_grp:
+            if not self.nodes[i].normal_or_wheel_node():
+                ignore_wheel_nodes.append(i)
+
+        if len(ignore_wheel_nodes)>0:
+            print("Wheel nodes detected: ",ignore_wheel_nodes,"\nDeleting from list")
+            transfer = min_edit_grp.copy()
+            min_edit_grp = []
+            for i in transfer:
+                check = False
+                for j in ignore_wheel_nodes:
+                    if i==j:
+                        check = True
+                        break
+                if not check:
+                    min_edit_grp.append(i)
+
+            print(min_edit_grp)
+        
         new_edit_grp = Edit_node_groups(len(self.node_edit_groups),self.index,min_edit_grp.copy())
         self.node_edit_groups.append(new_edit_grp)
         return
@@ -2287,7 +2977,7 @@ def menu():
     return
 
 #main code
-print("truck-operations.py - Version 0.1.1")
+print("truck-operations.py - Version 0.2")
 print("Author: Ra1pid")
 option = input("Press enter to continue, or enter info for more information\n")
 if option.find("info")>-1:
