@@ -3,20 +3,17 @@ Some documentation for each function of this program.
 Thank God!
 ~ Ra1pid
 
-[truck-operations.py Version]: 0.2
+[truck-operations.py Version]: 0.2.1
 
 [truck-operations.py Update Description]:
-- Reads and displays wheels from vehicle files: node1, node2 and all auto-generated nodes for each wheel, other data will be read in future updates
-- Reads and recognizes comments for ;grp: headings, able to display data groups
-- Reads existing Edit Groups through comments
-- Bugfix: allows reading of beams past detacher_group keyword
-- Bugfix: fixed error in displaying beams with only Renumber nodes option selected
+- Option to print comments together with nodes & beams
+- View Options menu available when viewing Edit Node group data
+- Bugfix: fixed miscalculation in wheel nodes - (First_Node to Last_Node) *please note this doesn't yet account for cinecam nodes, so it will be inaccurate for flextires; working on that
 
-
-[Program Functionality Update Date]: 23/11/25
+[Program Functionality Update Date]: 29/01/25
 [Program Functionality Update Description]
-	- added changes occurring in truck-operations.py 0.2 for (done) sections
-	- added documentation for [VIEWDATA], [Main Menu] and [Truck File Menu]
+	- added changes occurring in truck-operations.py 0.2.1 for (done) sections
+	- collated documentation for menus: [View Options Menu], [Output Choice Menu]
 
 [Function List, by menus]
 (done) - Documentation has been completed for this function/menu
@@ -27,7 +24,7 @@ Thank God!
 	- 101. Create new torquecurve - [TORQCURVE] (done)
 
 - [Truck File Menu] from [SELECTTRUCK] (done)
-->	- 1. View data groups - [VIEWDATA] (done)
+	- 1. View data groups - [VIEWDATA] (done)
 	- 2. Edit nodes menu - [EDITNODES]
 	- 51. Auto-create headlight flares - [HEADFLARES]
 	- 101. Convert nodes to map coordinates - .tobj format - [TRUCK2TOBJ]
@@ -46,6 +43,9 @@ Thank God!
 - [Undo Menu] from [EDITNODESHISTORY]
 	- 1. Undo a field - [UNDONODESEDIT]
 	- 2. Redo a field - [REDONODESEDIT]
+
+-> - [View Options Menu] during display (done)
+-> - [Output Choice Menu] during display (done)
 
 [Menu Descriptions]
 
@@ -88,6 +88,86 @@ Operations starting at 51 to 100 deal with generating vehicle sections from read
 Operations starting at 101 and above deal with converting read data into another format.
 Entering -1 will exit back to [Main Menu]. All changes will be preserved as long as the program is running.
 
+[View Options Menu]
+[Purpose]: 
+[Location]: N/A
+[Availability]: Whenever nodes or beams are to be displayed
+[How to Use]
+This menu typically comes in this form:
+
+	View Options Menu - select an option to toggle it:
+	X. Opt description - state
+	...
+	Anything else: Continue to display
+	Enter choice:
+
+Options can be toggled between True and False by entering the corresponding integer beside the corresponding description. 
+Any option set to True will be activated for the following display.
+Entering any other input will continue to the display and show this message:
+			
+	Continuing to display
+
+
+The options vary depending on the main type of data being displayed:
+
+	[View Options Menu-Nodes] - for nodes as the main data type
+		Option list:
+			1. Show beams: display beams that use nodes from the given nodelist, or all beams if all nodes are to be displayed.
+			2. Renumber nodes: (only available if a set of nodes is given) display nodes as renumbered from 0 in the order given in the nodelist; if Show beams option is selected, beams will also display renumbered nodes.
+				Example: 
+					Node selection: 5,10,15,20
+					Renumbered nodes: 0,1,2,3
+
+			3. Show comments: (only in versions 0.2.1+) display comments read from the .truck file in between the nodes from given nodelist; if Show beams option is selected, comments will also be displayed there.
+
+	[View Options Menu-Beams] - for beams as the main data type
+		Option list:
+			1. Show nodes: display nodes that are used by the beams from the given beamlist, or all nodes if all beams are to be displayed.
+			2. Renumber nodes: display nodes as renumbered from 0 in order as extracted from the beamlist; if Show nodes option is selected, the renumbered nodes will be displayed. (Recommended to use Show nodes option with this option)
+				Example: 
+					Beam selection: 5,10,15,20
+					Nodes will include any node listed in selected beams:
+					;Renumbered nodes: [79, 292, 282, 283, 278, 279]
+					Renumbered beams:
+						
+						beams
+						0, 1, i
+						2, 3, i
+						4, 2, i
+						2, 5, i
+					
+					Original beams:
+						
+						beams
+						79, 292, i
+						282, 283, i
+						278, 282, i
+						282, 279, i	
+
+			3. Show comments: (only in versions 0.2.1+) display comments read from the .truck file in between the beams from given nodelist; if Show nodes option is selected, comments will also be displayed there.
+
+[Output Choice Menu]
+[Purpose]: Choose which method to display certain output; by text file or through the console.
+[Location]: N/A
+[Availability]: Before display of certain output
+[How to Use]
+This menu typically precedes a requested output and looks like this:
+
+	Choose method for output:
+	1. Console
+	2. Output.txt file
+	Any other output will result in console display
+	Enter choice:
+
+Entering 2 will make sure that the output will be written to Output.txt file, which can be located in the same folder as the program folder.
+IMPORTANT: Any previous version of this Output.txt will be completely overwritten once this option is selected, so make sure to save the contents in the file quickly.
+If you selected this option, the following message will be shown, meaning the output has been written to the text file:
+
+	Writing to Output.txt
+
+Any other input will result in displaying only to the console. The following message will be shown:
+
+	Writing to console
 
 [Function Descriptions]
 
@@ -143,7 +223,7 @@ After reading all data, the program will process all mirror and duplicate nodes 
 	Node X has duplicate node X
 	...
 
-[Video Tutorials]: https://www.youtube.com/watch?v=EX5QQ1qXWwM&pp=0gcJCccJAYcqIYzv
+[Video Tutorials]: https://www.youtube.com/watch?v=EX5QQ1qXWwM&pp=0gcJCccJAYcqIYzv, https://www.youtube.com/watch?v=qH5mD5UXhIU&pp=2AYD
 
 [SELECTTRUCK]
 [Function]: Selects an opened vehicle file to conduct operations on
@@ -161,7 +241,7 @@ The following lines will be displayed at the beginning:
 X stands for the position of the corresponding vehicle file that is opened up. The first opened up file will start at 0, the next at 1 and so on. To select the file you want to conduct operations on, enter the corresponding position number in the prompt to select it. You will then be directed to the [Truck File Menu].
 
 If you enter a value above or below the available range (0 to n-1, where n is the number of vehicle files opened up), or any other non-integer value, you will get an 'Out of bounds' error and it will return to the [Main Menu].
-[Video Tutorials]: https://www.youtube.com/watch?v=EX5QQ1qXWwM&pp=0gcJCccJAYcqIYzv
+[Video Tutorials]: https://www.youtube.com/watch?v=EX5QQ1qXWwM&pp=0gcJCccJAYcqIYzv, https://www.youtube.com/watch?v=qH5mD5UXhIU&pp=2AYD
 
 [TORQCURVE]
 [Function]: Creates a new torquecurve based on a list of rpm to current torque ratios
@@ -189,15 +269,7 @@ If a line couldn't be recognized, the program will throw this error:
 Make sure to give (positive) integer values for rpm and current_torque values for each line to allow the program to read it.
 
 Once you've entered all the lines you want for the torquecurve, enter 'STOP' to continue.
-The next display will ask for the output choice:
-
-	Choose method for output:
-	1. Console
-	2. Output.txt file
-	Any other output will result in console display
-	Enter choice:
-
-Enter 2 for the program to write to the file 'Output.txt' in the same folder, or any other input for displaying on the console. 
+The following menu will be the [Output Choice Menu] in which you can decide how to display. 
 
 The displayed text will be in this format:
 
@@ -284,42 +356,9 @@ When you've entered your choice, you will move to the corresponding sequence of 
 			
 			Showing metadata of node  X
 			
-		If you selected All nodes or entered a selection of nodes, it will now show the View Options Menu [VIEWDATA-MENU-B-1]:
-			
-				View Options Menu - select an option to toggle it:
-				1. Show beams -  False
-				2. Renumber nodes -  False
-				Anything else: Continue to display
-				Enter choice:
-		
-			*Option 2 is only available when a selection of nodes is given.
-			Only options set as True will be enabled. Select an option in the menu to toggle between False and True.
-			The menu will loop until you enter an input outside of the given options.
-			Here is the breakdown of options:
-			
-				1. Show beams: 
-					Display any beam that uses the selection of nodes given. 
-					(If All nodes selected, then all beams read will be displayed)
-				2. Renumber nodes: (Only available with selection of nodes) 
-					Displays selected nodes as renumbered from 0 in order of selection.
-					Example: 
-						Node selection: 5,10,15,20
-						Renumbered nodes: 0,1,2,3
-			Once you give any other input outside the given options, the program will continue to display and show this message:
-			
-				Continuing to display
-		
+		If you selected All nodes or entered a selection of nodes, it will now show [View Options Menu-Nodes].
 		----------------------------------------------------------------------------------------------
-		The last prompt before display will ask for which method to write the output:
-		
-			Choose method for output:
-			1. Console
-			2. Output.txt file
-			Any other output will result in console display
-			Enter choice:
-		
-		Entering 2 will write to a new Output.txt file (overwrites any old file!) in the same folder as the program file.
-		Any other input will lead to display on the console.
+		The following menu will be the [Output Choice Menu] in which you can decide how to display. 
 		----------------------------------------------------------------------------------------------
 		The program will now display the nodes and other related information on the console (or Output.txt if you had selected it).
 		Types of display:
@@ -424,59 +463,9 @@ When you've entered your choice, you will move to the corresponding sequence of 
 		
 		If you enter any other input, it will exit back to [VIEWDATA-MENU-A].
 		----------------------------------------------------------------------------------------------
-		The next prompt will be the View Options Menu [VIEWDATA-MENU-B-2]:
-			
-				View Options Menu - select an option to toggle it:
-				1. Show nodes -  False
-				2. Renumber nodes -  False
-				Anything else: Continue to display
-				Enter choice:
-		
-			*Option 2 is only available when a selection of beams is given.
-			Only options set as True will be enabled. Select an option in the menu to toggle between False and True.
-			The menu will loop until you enter an input outside of the given options.
-			Here is the breakdown of options:
-			
-				1. Show nodes: 
-					Display any node that is used in the selection of beams given. 
-					(If All beams selected, then all nodes read will be displayed)
-				2. Renumber nodes: (Only available with selection of beams) 
-					Displays any node used by the beams as renumbered from 0 in order of selection.
-					Example: 
-						Beam selection: 5,10,15,20
-						Nodes will include any node listed in selected beams:
-						;Renumbered nodes: [79, 292, 282, 283, 278, 279]
-						Renumbered beams:
-							
-							beams
-							0, 1, i
-							2, 3, i
-							4, 2, i
-							2, 5, i
-						
-						Original beams:
-							
-							beams
-							79, 292, i
-							282, 283, i
-							278, 282, i
-							282, 279, i	
-						
-			Once you give any other input outside the given options, the program will continue to display and show this message:
-			
-				Continuing to display
-		
+		The next prompt will be [View Options Menu-Beams].
 		----------------------------------------------------------------------------------------------
-		The last prompt before display will ask for which method to write the output:
-		
-			Choose method for output:
-			1. Console
-			2. Output.txt file
-			Any other output will result in console display
-			Enter choice:
-		
-		Entering 2 will write to a new Output.txt file (overwrites any old file!) in the same folder as the program file.
-		Any other input will lead to display on the console.
+		The following menu will be the [Output Choice Menu] in which you can decide how to display. 
 		----------------------------------------------------------------------------------------------
 		The program will now display the beams and other related information on the console (or Output.txt if you had selected it).
 		Types of display:
@@ -517,7 +506,9 @@ When you've entered your choice, you will move to the corresponding sequence of 
 			...
 			X  -  (Ax to Bx)  -  meshwheels2
 			More data to be collected in future updates
-		
+			
+			***0.2.1+ only: fixed miscalculation in which nodes are repeated for the next wheel.
+			
 		*A and B are nodes
 		The first integer in each line is the index number of the wheel.
 		The second bracketed range of nodes refers to the range of wheel nodes generated and used by this specific wheel.
@@ -544,7 +535,8 @@ When you've entered your choice, you will move to the corresponding sequence of 
 			Do you wish to view node and/or beam data?
 			Enter y to show, or anything else to not display:
 		
-		If you want any node or beam data, enter 'y' for this prompt. It will take you to [VIEWDATA-MENU-B-1] or [VIEWDATA-MENU-B-2]:
+		If you want any node or beam data, enter 'y' for this prompt. 
+		It will take you to [View Options Menu-Nodes] or [View Options Menu-Beams]:
 				
 				View Options Menu - select an option to toggle it:
 				1. ...
@@ -553,8 +545,8 @@ When you've entered your choice, you will move to the corresponding sequence of 
 				Enter choice:
 		
 			Depending on the type of data group selected it will show varying options:
-				1. If the data group comprises of a selection of nodes, refer to [VIEWDATA-MENU-B-1]
-				2. If the data group comprises of a selection of beams, refer to [VIEWDATA-MENU-B-2]
+				1. If the data group comprises of a selection of nodes, refer to [View Options Menu-Nodes]
+				2. If the data group comprises of a selection of beams, refer to [View Options Menu-Beams]
 			
 			Once you've exited the View Options Menu, it will continue to display.
 		
@@ -568,18 +560,7 @@ When you've entered your choice, you will move to the corresponding sequence of 
 			Nodelist: [A,B,C,...]
 			
 		Above is an example of how a node group will be displayed. The list of nodes are given in the Nodelist line.
-		If you chose to display the nodes/beams, the output prompt will be shown next:
-				
-				Choose method for output:
-				1. Console
-				2. Output.txt file
-				Any other output will result in console display
-				Enter choice:
-
-			Entering 2 will write to a new Output.txt file (overwrites any old file!) in the same folder as the program file.
-			Any other input will lead to display on the console.
-			Once you've selected your choice of display, the list of nodes/beams will be displayed in the selected method.
-			You can refer to options 1 and 2 for examples of how this will be displayed.
+		If you chose to display the nodes/beams, the following menu will be the [Output Choice Menu] in which you can decide how to display. 
 		
 		Once displayed, the program will return to [VIEWDATA-MENU-A].
 	----------------------------------------------------------------------------------------------

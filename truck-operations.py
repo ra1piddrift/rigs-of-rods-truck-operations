@@ -1007,7 +1007,9 @@ class Edit_node_groups:
     
     
     def show_node_val(self):
-        truckfiles[self.truck_index].display_manager("NODES",False,False,False,self.edit_nodes)
+        #Main data type is nodes
+        view_options = truckfiles[self.truck_index].view_options_menu(True)
+        truckfiles[self.truck_index].display_manager("NODES",False,view_options[0],view_options[1],view_options[2],self.edit_nodes)
         return
 
     def print_edit_grp(self,write_file = False):
@@ -1097,11 +1099,13 @@ class Truck:
             node_count = len(truckfiles[self.truck_index].nodes)
             beam_count = len(truckfiles[self.truck_index].beams)
             wheel_count = len(truckfiles[self.truck_index].wheels)
+            #print([self.position,node_count,beam_count,wheel_count])
             return [self.position,node_count,beam_count,wheel_count]
 
         def save_snapshot(self):
             sav_snapshot = self.get_snapshot()
             pos = len(self.snapshots)
+            #print(sav_snapshot)
             self.snapshots.append(sav_snapshot)
             return pos
 
@@ -1346,14 +1350,18 @@ class Truck:
 
         def activate(self):
             num_nodes = self.numrays*2
+            #print(truckfiles[self.truck_index].nodes[len(truckfiles[self.truck_index].nodes)-1].index)
             first_node = len(truckfiles[self.truck_index].nodes)
-            last_node = first_node+num_nodes
+            last_node = first_node+num_nodes-1
             
             self.w_nodes = [first_node,last_node]
-            for i in range(self.w_nodes[0],self.w_nodes[1]):
+            count = 0
+            for i in range(self.w_nodes[0],self.w_nodes[1]+1):
+                #print(count)
                 new_node = Node(i,"",2)
                 new_node.set_wheel_id(self.index)
                 truckfiles[self.truck_index].nodes.append(new_node)
+                count+=1
             print("Added new wheel")
             return
         
@@ -1466,9 +1474,10 @@ class Truck:
                 self.grp_counter = -1
 
             def read_comment(self,com):
-                self.comments_read.append(com)
+                #print([com.removesuffix('\n')])
+                self.comments_read.append(com.removesuffix('\n'))
                 print("Reading comment in ",truckfiles[self.truck_index].snapshot_maker.position)
-                truckfiles[self.truck_index].comments.append([com,truckfiles[self.truck_index].snapshot_maker.get_snapshot()])
+                truckfiles[self.truck_index].comments.append([com.removesuffix('\n'),truckfiles[self.truck_index].snapshot_maker.get_snapshot()])
                 self.recognize()
                 return
 
@@ -1604,6 +1613,7 @@ class Truck:
                     nodes2 = True
                     beams = False
                     print("Reading nodes2")
+                    get_position()
                     #self.snapshot_maker.set_state('nodes')
                     continue
                 elif nodes_check:
@@ -1611,6 +1621,7 @@ class Truck:
                     nodes2 = False
                     beams = False
                     print("Reading nodes")
+                    get_position()
                     #self.snapshot_maker.set_state('nodes')
                     continue
                 elif beams_check:
@@ -1618,6 +1629,7 @@ class Truck:
                     nodes2 = False
                     beams = True
                     print("Reading beams")
+                    get_position()
                     #self.snapshot_maker.set_state('beams')
                     continue
 
@@ -2091,31 +2103,12 @@ class Truck:
             nodelist = self.data_groups[choice].n_list.copy()
             view_nodes = input("Do you wish to view node and/or beam data?\nEnter y to show, or anything else to not display: ")
             if view_nodes=='y':
-                opt_show_beams = False
-                opt_renum = False
-                
-                opt = 0
-                while opt !=-1:
-                    print("View Options Menu - select an option to toggle it:")
-                    print("1. Show beams - ",opt_show_beams)
-                    print("2. Renumber nodes - ",opt_renum)
-                    print("Anything else: Continue to display")
-                    try:
-                        choice = int(input("Enter choice: "))
-                    except:
-                        choice = 0
-                    match(choice):
-                        case (1):
-                            opt_show_beams = not opt_show_beams
-                        case (2):
-                            opt_renum = not opt_renum
-                        case _:
-                            opt = -1
-                            print("Continuing to display\n")
+                #Main data type is nodes
+                view_options = self.view_options_menu(True)
             for i in data_grp_disp_lst:
                 print(i)
             if view_nodes=='y':
-                self.display_manager("NODES",False,opt_show_beams,opt_renum,nodelist)
+                self.display_manager("NODES",False,view_options[0],view_options[1],view_options[2],nodelist)
         else:
             print("Returning to menu")
 
@@ -2200,38 +2193,17 @@ class Truck:
             case _:
                 print("Exiting")
                 return
-
-        opt_show_beams = False
-        opt_renum = False
-        
-        choice = 0
-        while choice !=-1 and (len(nodelist)>1 or all_nodes):
-            print("View Options Menu - select an option to toggle it:")
-            print("1. Show beams - ",opt_show_beams)
-            if not all_nodes:
-                print("2. Renumber nodes - ",opt_renum)
-            print("Anything else: Continue to display")
-            try:
-                choice = int(input("Enter choice: "))
-            except:
-                choice = 0
-            match(choice):
-                case (1):
-                    opt_show_beams = not opt_show_beams
-                case (2) if not all_nodes:
-                    opt_renum = not opt_renum
-                case _:
-                    choice = -1
-                    print("Continuing to display")
-
+            
+        #Main data type is nodes
+        view_options = self.view_options_menu(True,all_nodes)
         if len(nodelist)==1:
             print("Showing metadata of node ",self.nodes[nodelist[0]].get_index())
 
         #"NODES",all_nodes,opt_show_beams,opt_renum,nodelist
         if all_nodes:
-            self.display_manager("NODES",all_nodes,opt_show_beams,False)
+            self.display_manager("NODES",all_nodes,view_options[0],view_options[1],view_options[2])
         else:
-            self.display_manager("NODES",all_nodes,opt_show_beams,opt_renum,nodelist)
+            self.display_manager("NODES",all_nodes,view_options[0],view_options[1],view_options[2],nodelist)
         return
 
     def view_by_beams(self):
@@ -2280,34 +2252,14 @@ class Truck:
             case _:
                 print("Exiting")
                 return
-        opt_show_nodes = False
-        opt_renum = False
         
-        choice = 0
-        while choice !=-1:
-            print("View Options Menu - select an option to toggle it:")
-            print("1. Show nodes - ",opt_show_nodes)
-            if not all_beams:
-                print("2. Renumber nodes - ",opt_renum)
-            print("Anything else: Continue to display")
-            try:
-                choice = int(input("Enter choice: "))
-            except:
-                choice = 0
-            match(choice):
-                case (1):
-                    opt_show_nodes = not opt_show_nodes
-                case (2) if not all_beams:
-                    opt_renum = not opt_renum
-                case _:
-                    choice = -1
-                    print("Continuing to display")
-
+        #Main data type is beams
+        view_options = self.view_options_menu(False,all_beams)
         #"BEAMS",all_beams,opt_show_nodes,opt_renum,beamlist
         if all_beams:
-            self.display_manager("BEAMS",all_beams,opt_show_nodes,False)
+            self.display_manager("BEAMS",all_beams,view_options[0],view_options[1],view_options[2])
         else:
-            self.display_manager("BEAMS",all_beams,opt_show_nodes,opt_renum,beamlist)
+            self.display_manager("BEAMS",all_beams,view_options[0],view_options[1],view_options[2],beamlist)
         return
 
     def find_nodes_from_beams(self,beamlist):
@@ -2348,27 +2300,60 @@ class Truck:
                 beamlist.append(i)
             
         return beamlist.copy()
+
+    def view_options_menu(self,main_data_type,all_data=False):
+        #main_data_type = True: nodes, False: beams
+        
+        opt = 0
+        opt_cmplmnt_data = False
+        opt_renum = False
+        opt_com = True
+        while opt !=-1:
+            print("View Options Menu - select an option to toggle it:")
+            if main_data_type:
+                print("1. Show beams - ",opt_cmplmnt_data)
+            else:
+                print("1. Show nodes - ",opt_cmplmnt_data)
+            if not all_data:
+                print("2. Renumber nodes - ",opt_renum)
+            print("3. Show comments - ",opt_com)
+            print("Anything else: Continue to display")
+            try:
+                choice = int(input("Enter choice: "))
+            except:
+                choice = 0
+            match(choice):
+                case (1):
+                    opt_cmplmnt_data = not opt_cmplmnt_data
+                case (2) if not all_data:
+                    opt_renum = not opt_renum
+                case (3):
+                    opt_com  = not opt_com
+                case _:
+                    opt = -1
+                    print("Continuing to display\n")
+        return [opt_cmplmnt_data,opt_renum,opt_com]
     
-    def display_manager(self,data_type,all_data,opt_show_cmplmnt_data,opt_renum,datalist=[]):
+    def display_manager(self,data_type,all_data,opt_show_cmplmnt_data,opt_renum,opt_com,datalist=[]):
         #MAKE FUNCTION TO SHOW NODE METADATA
         #Show nodes
         nodelist = []
         n_list = []
         if data_type == "NODES":
             if all_data:
-                n_list = self.display_nodes(False)
+                n_list = self.display_nodes(False,opt_com)
             elif len(datalist)==1:
                 n_list = self.nodes[datalist[0]].display_metadata()
             else:
-                n_list = self.display_nodes(opt_renum,datalist)
+                n_list = self.display_nodes(opt_renum,opt_com,datalist)
         elif opt_show_cmplmnt_data or opt_renum:
             if all_data:
-                n_list = self.display_nodes(False)
+                n_list = self.display_nodes(False,opt_com)
             #FIND NODES MENTIONED IN BEAMS!!
             else:
                 nodelist = self.find_nodes_from_beams(datalist)
                 if opt_show_cmplmnt_data:
-                    n_list = self.display_nodes(opt_renum,nodelist)
+                    n_list = self.display_nodes(opt_renum,opt_com,nodelist)
                 
 
         #Show beams
@@ -2376,18 +2361,18 @@ class Truck:
         b_list = []
         if data_type == "BEAMS":
             if all_data:
-                b_list = self.display_beams(False,[])
+                b_list = self.display_beams(False,opt_com,[])
             elif len(nodelist)>0:
-                b_list = self.display_beams(opt_renum,datalist,nodelist)
+                b_list = self.display_beams(opt_renum,opt_com,datalist,nodelist)
             else:
-                b_list = self.display_beams(opt_renum,datalist)
+                b_list = self.display_beams(opt_renum,opt_com,datalist)
         elif opt_show_cmplmnt_data:
             if all_data:
-                b_list = self.display_beams(False,[])
+                b_list = self.display_beams(False,opt_com,[])
             #FIND BEAMS MENTIONED IN NODE LIST!
             else:
                 beamlist = self.find_beams_from_nodes(datalist)
-                b_list = self.display_beams(opt_renum,beamlist,datalist)
+                b_list = self.display_beams(opt_renum,opt_com,beamlist,datalist)
 
         op = Output_choice()
         #Print all stuff
@@ -2400,7 +2385,29 @@ class Truck:
         op.close()
         return
 
-    def display_nodes(self,opt_renum,nodelist=[]):
+    def display_comments(self,data_type,d_id):
+        ret_list = []
+        for i in self.comments:
+            #print(i)
+            match(data_type):
+                case('nodes'):
+                    #print('2')
+                    if i[1][0]=='nodes' and i[1][1]==d_id:
+                        #print(i)
+                        ret_list.append(i[0])
+                case('nodes2'):
+                    if i[1][0]=='nodes2' and i[1][1]==d_id:
+                        ret_list.append(i[0])
+                case('beams'):
+                    if i[1][0]=='beams' and i[1][2]==d_id:
+                        ret_list.append(i[0])
+                case('wheels'):
+                    if i[1][0]=='wheels' and i[1][3]==d_id:
+                        ret_list.append(i[0])
+                                        
+        return ret_list.copy()
+    
+    def display_nodes(self,opt_renum,opt_com,nodelist=[]):
         ret_list = []
         disp_nodes = False
         disp_nodes2 = False
@@ -2447,7 +2454,7 @@ class Truck:
                     #op.display(k)
                     ret_list.append(k)
         
-
+        #Getting lines for nodes
         if len(nodelist)>0:
             num = 0
             for j in nodelist:
@@ -2463,6 +2470,18 @@ class Truck:
                     disp_nodes2 = True
                     disp_nodes = False
 
+                if opt_com:
+                    com_list = []
+                    if disp_nodes:
+                        #print('1')
+                        com_list = self.display_comments('nodes',j)
+                    elif disp_nodes2:
+                        com_list = self.display_comments('nodes2',j)
+
+                    if len(com_list)>0:
+                        for i in com_list:
+                            ret_list.append(i)
+                
                 if opt_renum and disp_nodes:
                     #op.display(str(num)+self.nodes[j].display_node(True))
                     ret_list.append(str(num)+self.nodes[j].display_node(True))
@@ -2487,11 +2506,23 @@ class Truck:
                     disp_nodes2 = True
                     disp_nodes = False
                 #op.display(i.display_node())
+                if opt_com:
+                    com_list = []
+                    if disp_nodes:
+                        #print('1')
+                        com_list = self.display_comments('nodes',i.index)
+                    elif disp_nodes2:
+                        com_list = self.display_comments('nodes2',i.index)
+
+                    if len(com_list)>0:
+                        for j in com_list:
+                            ret_list.append(j)
+
                 ret_list.append(i.display_node())
         
         return ret_list.copy()
 
-    def display_beams(self,opt_renum,beamlist,renum_nodes=[]):
+    def display_beams(self,opt_renum,opt_com,beamlist,renum_nodes=[]):
         ret_list = []
         #print(renum_nodes)
         if opt_renum:
@@ -2537,10 +2568,22 @@ class Truck:
                         ret_list.append(str(i)+": "+self.beams[i].display_beam())
                 else:
                     for i in beamlist:
-                        print("Beam ",i,": ",self.beams[i].display_beam())
+                        #print("Beam ",i,": ",self.beams[i].display_beam())
+                        if opt_com:
+                            com_list = self.display_comments('beams',i)
+                            if len(com_list)>0:
+                                for j in com_list:
+                                    ret_list.append(j)
+
                         ret_list.append(self.beams[i].display_beam())
             else:
                 for i in self.beams:
+                    if opt_com:
+                        com_list = self.display_comments('beams',i.index)
+                        if len(com_list)>0:
+                            for j in com_list:
+                                ret_list.append(j)
+
                     ret_list.append(i.display_beam())
                       
                     
@@ -2977,7 +3020,7 @@ def menu():
     return
 
 #main code
-print("truck-operations.py - Version 0.2")
+print("truck-operations.py - Version 0.2.1")
 print("Author: Ra1pid")
 option = input("Press enter to continue, or enter info for more information\n")
 if option.find("info")>-1:
