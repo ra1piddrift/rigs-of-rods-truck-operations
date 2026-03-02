@@ -38,28 +38,34 @@ class Output_choice:
 class Node:
 
 #Class objects:
-#self.node, self.index, self.al_index, self.x, self.y, self.z, self.weight, self.node_opt, self.edit_group, self.z_mirror, self.duplicates, self.node_opt_initial
+#self.node, self.index, self.al_index, self.x, self.y, self.z, self.weight, self.node_opt, self.edit_group, self.z_mirror, self.duplicates, self.node_opt_initial, self.node_type
 
     def __init__(self,n_index,node_line,node_type,al_num=""):
         self.node = True
         self.index = n_index
         self.edit_group = []
-        #node_type = 2 -> wheel node
-        if node_type == 2:
-            self.wheel_node = True
-            self.al_index = ""
-            self.wheelid = -1
-        #node_type = 1 -> nodes2
-        elif node_type == 1:
-            self.wheel_node = False
-            self.al_index = al_num
+        self.node_type = node_type
+        
+        match(self.node_type):
+            #node_type = 3 -> cinecam node
+            case(3):
+                self.al_index = ""
+            #node_type = 2 -> wheel node
+            case(2):
+                #self.wheel_node = True
+                self.al_index = ""
+                self.wheelid = -1
+            #node_type = 1 -> nodes2
+            case(1):
+                #self.wheel_node = False
+                self.al_index = al_num
             
-        #node_type = 0 -> nodes
-        else:
-            self.wheel_node = False
-            self.al_index = ""
+            #node_type = 0 -> nodes
+            case(0):
+                #self.wheel_node = False
+                self.al_index = ""
 
-        if node_type<2:
+        if node_type!=2:
             try:
                 self.x = Decimal(node_line[0])
                 self.y = Decimal(node_line[1])
@@ -69,7 +75,16 @@ class Node:
                 self.node = False
             self.weight = Decimal(-1)
 
-            if len(node_line)>3:
+            if node_type==3:
+                self.bindings = node_line[3:11]
+                if len(node_line)>11:
+                    self.opt = ''
+                    for i in node_line[11:]:
+                        self.opt+=','+i
+                else:
+                    self.opt = ''
+
+            elif len(node_line)>3:
                 options = node_line[3].lstrip().split(" ")
                 if len(options)>1:
                     try:
@@ -92,13 +107,19 @@ class Node:
         self.node_opt_initial = "unmodified"
 
     def set_wheel_id(self,w_id):
-        if self.wheel_node:
+        if self.node_type==2:
             self.wheelid = w_id
         return
     
     def display_node(self,renum=False):
-        if self.wheel_node:
+        if self.node_type==2:
             return ";wheel node "+str(self.index)+" of wheel "+str(self.wheelid)
+        elif self.node_type==3:
+            ret_str = str(self.x)+","+str(self.y)+","+str(self.z)
+            for i in self.bindings:
+                ret_str += ','+str(i)
+            ret_str+=self.opt
+            return ret_str
         
         if renum:
             line = ""
@@ -121,12 +142,23 @@ class Node:
     def display_metadata(self):
         ret_list = []
         ret_list.append("Node "+str(self.get_index()))
-        if not self.nodes_or_nodes2():
-            ret_list.append("Numerical Index: "+str(self.index))
 
-        if self.wheel_node:
+        if self.node_type==2:
             ret_list.append("Wheel node of wheel "+str(self.wheelid))
-        else:        
+        elif self.node_type==3:
+            ret_list.append("Cinecam node")
+            ret_list.append("Coordinates: "+str(self.x)+", "+str(self.y)+", "+str(self.z))
+            bind_str = "Bindings: "+self.bindings[0]
+            for i in range(1,len(self.bindings)):
+                bind_str += ','+self.bindings[i]
+            ret_list.append(bind_str)
+            if self.opt!='':
+                ret_list.append("Options: "+self.opt)
+            
+        else:
+            if not self.nodes_or_nodes2():
+                ret_list.append("Numerical Index: "+str(self.index))
+
             ret_list.append("Coordinates: "+str(self.x)+", "+str(self.y)+", "+str(self.z))
             if len(self.z_mirror)>0:
                 ret_list.append("Z-Mirror Nodes (numerical index only): "+str(self.z_mirror))
@@ -184,10 +216,14 @@ class Node:
         return self.duplicates.copy()
 
     def normal_or_wheel_node(self):
-        return not self.wheel_node
+        if self.node_type==2:
+            return False
+        else:
+            return True
+        
     
     def edit_node(self,field,value,mirror=False):
-        if self.wheel_node:
+        if self.node_type==2:
             return
         
         match(field):
@@ -231,16 +267,20 @@ class Node:
                         self.node_opt = self.node_opt[:j]+self.node_opt[j+1:]
                 
             case('weight'):
+                #print(1)
                 check = self.node_opt.find('l')
                 if check>=0:
+                    #print(2)
+                    #print(self.weight)
                     self.weight+=value
+                    #print(self.weight)
                     if self.weight<0:
                         self.weight*=-1
                 
         return
 
     def undo_edit(self,field,value="NONE",mirror=False):
-        if self.wheel_node:
+        if self.node_type==2:
             return
         
         match(field):
@@ -265,8 +305,11 @@ class Node:
                 self.node_opt = self.node_opt_initial
                 self.node_opt_initial = "unmodified"
             case('weight'):
+                #print(1)
                 check = self.node_opt.find('l')
-                if check>0:
+                #print(check)
+                if check>=0:
+                    #print(2)
                     self.weight-=value
                     if self.weight<0:
                         self.weight*=Decimal(-1)
@@ -1009,6 +1052,7 @@ class Edit_node_groups:
     def show_node_val(self):
         #Main data type is nodes
         view_options = truckfiles[self.truck_index].view_options_menu(True)
+        #print(2)
         truckfiles[self.truck_index].display_manager("NODES",False,view_options[0],view_options[1],view_options[2],self.edit_nodes)
         return
 
@@ -1387,7 +1431,7 @@ class Truck:
             def __init__(self,t_index):
                 global truckfiles
                 self.truck_index = t_index
-                self.recog_keyw = ['wheels', 'wheels2','meshwheels','meshwheels2','flexbodywheels']
+                self.recog_keyw = ['wheels', 'wheels2','meshwheels','meshwheels2','flexbodywheels','cinecam']
                 self.active = False
                 self.keyword = ''
                 self.line = ''
@@ -1451,7 +1495,15 @@ class Truck:
                                 
                                 truckfiles[self.truck_index].wheels.append(n_wheel)
                                 
-                                                
+                        case('cinecam'):
+                            cinecam_index = len(truckfiles[self.truck_index].nodes)
+                            cinecam_data = self.line.split(',')
+                            n_cinecam = Node(cinecam_index,cinecam_data.copy(),3)
+                            if n_cinecam.node:
+                                truckfiles[self.truck_index].nodes.append(n_cinecam)
+                                print("Added new cinecam node")
+                            
+                            
                 return
             
             def receive(self,read_line):
@@ -1726,7 +1778,7 @@ class Truck:
                     else:                        
                         new_beam = Beam(len(self.beams),self.index,nodeA_id,nodeB_id,opt)
                         self.beams.append(new_beam)
-                        print("New beam at line ",lnum,": ",new_beam.display_beam())
+                        #print("New beam at line ",lnum,": ",new_beam.display_beam())
                         #com_manage.set_state('beams',new_beam.index)
                 else:
                     try:
@@ -1766,11 +1818,11 @@ class Truck:
     def find_mirrors_duplicates(self):
         print("Node mirrors and duplicates will be identified according to numerical index")
         for i in self.nodes:
-            if i.wheel_node:
+            if i.node_type==2:
                 continue
             
             for j in self.nodes:
-                if j.wheel_node:
+                if j.node_type==2:
                     continue
                 
                 if i.index == j.index:
@@ -2298,6 +2350,7 @@ class Truck:
                     chk_nodeB = True
             if chk_nodeA and chk_nodeB:
                 beamlist.append(i)
+                #print(1)
             
         return beamlist.copy()
 
@@ -2368,11 +2421,14 @@ class Truck:
                 b_list = self.display_beams(opt_renum,opt_com,datalist)
         elif opt_show_cmplmnt_data:
             if all_data:
+                #print(3)
                 b_list = self.display_beams(False,opt_com,[])
             #FIND BEAMS MENTIONED IN NODE LIST!
             else:
+                #print(4)
                 beamlist = self.find_beams_from_nodes(datalist)
-                b_list = self.display_beams(opt_renum,opt_com,beamlist,datalist)
+                if len(beamlist)>0:
+                    b_list = self.display_beams(opt_renum,opt_com,beamlist,datalist)
 
         op = Output_choice()
         #Print all stuff
@@ -2409,8 +2465,6 @@ class Truck:
     
     def display_nodes(self,opt_renum,opt_com,nodelist=[]):
         ret_list = []
-        disp_nodes = False
-        disp_nodes2 = False
         edit_grps = []
 
         if len(nodelist)>0:
@@ -2453,36 +2507,38 @@ class Truck:
                 if k != "No edits":
                     #op.display(k)
                     ret_list.append(k)
-        
+
+        #disp_nodes = False
+        #disp_nodes2 = False
+        disp = -1
         #Getting lines for nodes
         if len(nodelist)>0:
             num = 0
             for j in nodelist:
-                node_type = self.nodes[j].nodes_or_nodes2()
-                if node_type and disp_nodes != True:
-                    #op.display("nodes")
-                    ret_list.append("nodes")
-                    disp_nodes = True
-                    disp_nodes2 = False
-                elif node_type == False and disp_nodes2 != True:
-                    #op.display("nodes2")
-                    ret_list.append("nodes2")
-                    disp_nodes2 = True
-                    disp_nodes = False
+                #node_type = self.nodes[j].nodes_or_nodes2()
+                if disp!=self.nodes[j].node_type:
+                    disp = self.nodes[j].node_type
+                    match(disp):
+                        case(0):
+                            ret_list.append('nodes')
+                        case(1):
+                            ret_list.append('nodes2')
+                        case(3):
+                            ret_list.append('cinecam')
 
                 if opt_com:
                     com_list = []
-                    if disp_nodes:
+                    if disp==0:
                         #print('1')
                         com_list = self.display_comments('nodes',j)
-                    elif disp_nodes2:
+                    elif disp==1:
                         com_list = self.display_comments('nodes2',j)
 
                     if len(com_list)>0:
                         for i in com_list:
                             ret_list.append(i)
                 
-                if opt_renum and disp_nodes:
+                if opt_renum and disp==0:
                     #op.display(str(num)+self.nodes[j].display_node(True))
                     ret_list.append(str(num)+self.nodes[j].display_node(True))
                 else:
@@ -2494,24 +2550,25 @@ class Truck:
                 ret_list.append(";Renumbered nodes: "+str(nodelist)) #MAKE FUNCTION TO DISPLAY NODELIST!
         else:
             for i in self.nodes:
-                node_type = i.nodes_or_nodes2()
-                if node_type and disp_nodes != True:
-                    #op.display("nodes")
-                    ret_list.append("nodes")
-                    disp_nodes = True
-                    disp_nodes2 = False
-                elif node_type == False and disp_nodes2 != True:
-                    #op.display("nodes2")
-                    ret_list.append("nodes2")
-                    disp_nodes2 = True
-                    disp_nodes = False
+                #node_type = i.nodes_or_nodes2()
+                
+                if disp!=i.node_type:
+                    disp = i.node_type
+                    match(disp):
+                        case(0):
+                            ret_list.append('nodes')
+                        case(1):
+                            ret_list.append('nodes2')
+                        case(3):
+                            ret_list.append('cinecam')
+
                 #op.display(i.display_node())
                 if opt_com:
                     com_list = []
-                    if disp_nodes:
+                    if disp==0:
                         #print('1')
                         com_list = self.display_comments('nodes',i.index)
-                    elif disp_nodes2:
+                    elif disp==1:
                         com_list = self.display_comments('nodes2',i.index)
 
                     if len(com_list)>0:
@@ -2695,7 +2752,9 @@ class Truck:
         n_candidates = []
         x_chk_best = False
         for i in self.nodes:
-            
+
+            if i.node_type==2:
+                continue
             y_chk = ld_node.y<i.y
             x_chk = (ld_node.x>=i.x) or (ld_node.x+Decimal(0.1)>=i.x)
             z_chk = (ld_node.z>0 and i.z>0) or (ld_node.z<0 and i.z<0)
@@ -2863,6 +2922,8 @@ class Truck:
         count = 0
         for i in self.nodes:
             #print(count)
+            if i.node_type>1:
+                continue
             check_dup = False
             for j in dup_n_list:
                 if i.index == j:
@@ -2888,7 +2949,10 @@ class Truck:
         while choice != -1:
             print("Menu for ",self.file,":")
             print("1. View data groups")
-            print("2. Edit nodes menu")
+            if len(self.node_edit_groups)>0:
+                print("2. Edit nodes menu")
+            else:
+                print("2. Create new node edit group")
             print("--Truck file section creation--")
             print("51. Auto-create headlight flares")
             print("--Truck file conversion operations--")
@@ -3020,7 +3084,7 @@ def menu():
     return
 
 #main code
-print("truck-operations.py - Version 0.2.1")
+print("truck-operations.py - Version 0.2.2")
 print("Author: Ra1pid")
 option = input("Press enter to continue, or enter info for more information\n")
 if option.find("info")>-1:

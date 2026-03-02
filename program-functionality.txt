@@ -3,17 +3,18 @@ Some documentation for each function of this program.
 Thank God!
 ~ Ra1pid
 
-[truck-operations.py Version]: 0.2.1
+[truck-operations.py Version]: 0.2.2
 
 [truck-operations.py Update Description]:
-- Option to print comments together with nodes & beams
-- View Options menu available when viewing Edit Node group data
-- Bugfix: fixed miscalculation in wheel nodes - (First_Node to Last_Node) *please note this doesn't yet account for cinecam nodes, so it will be inaccurate for flextires; working on that
+- Now reads cinecam nodes, so generated wheel nodes will now be accurate for flextires: view these nodes in [VIEWDATA]
+- [Truck File Menu] now shows option to create a node edit group if no edit groups are made
+- Bugfix: errors in functions relating to introduction of wheel nodes
+- Bugfix: fixed issue in [VIEWDATA] where it shows all of the vehicle beams when selecting 'Show beams' option for node groups created through auto flare creation, and any node group that doesn't have shared beams
+- Bugfix: fixed issue in [UNDONODESEDIT] where node weight values were not being undone even when selected for undoing
 
-[Program Functionality Update Date]: 29/01/25
+[Program Functionality Update Date]: 02/03/25
 [Program Functionality Update Description]
-	- added changes occurring in truck-operations.py 0.2.1 for (done) sections
-	- collated documentation for menus: [View Options Menu], [Output Choice Menu]
+	- added changes occurring in truck-operations.py 0.2.2 for (done) sections
 
 [Function List, by menus]
 (done) - Documentation has been completed for this function/menu
@@ -23,8 +24,8 @@ Thank God!
 	- 2. Select a .truck file for operations - [SELECTTRUCK] (done)
 	- 101. Create new torquecurve - [TORQCURVE] (done)
 
-- [Truck File Menu] from [SELECTTRUCK] (done)
-	- 1. View data groups - [VIEWDATA] (done)
+-> - [Truck File Menu] from [SELECTTRUCK] (done)
+->	- 1. View data groups - [VIEWDATA] (done)
 	- 2. Edit nodes menu - [EDITNODES]
 	- 51. Auto-create headlight flares - [HEADFLARES]
 	- 101. Convert nodes to map coordinates - .tobj format - [TRUCK2TOBJ]
@@ -44,8 +45,8 @@ Thank God!
 	- 1. Undo a field - [UNDONODESEDIT]
 	- 2. Redo a field - [REDONODESEDIT]
 
--> - [View Options Menu] during display (done)
--> - [Output Choice Menu] during display (done)
+ - [View Options Menu] during display (done)
+ - [Output Choice Menu] during display (done)
 
 [Menu Descriptions]
 
@@ -82,6 +83,9 @@ This menu comes right after the program introduction and typically looks like th
 	101. Convert nodes to map coordinates - .tobj format
 	-1. Exit
 	Enter choice:
+
+	***In versions 0.2.2+, if no node edit groups have yet been created, option 2 will be displayed as such:
+		2. Create new node edit group
 
 Operations can be accessed by entering the corresponding integer beside the corresponding description. 
 Operations starting at 51 to 100 deal with generating vehicle sections from read data.
@@ -371,11 +375,18 @@ When you've entered your choice, you will move to the corresponding sequence of 
 				Node Weight (specified in line): ...
 
 			*Node Options and Node Weight are only displayed if specified.
-			**If the node is a wheel node, then Coordinates, Z-Mirror Nodes, Node Options and Node Weight won't be displayed.
+			**If the node is a wheel node (0.2+), then Coordinates, Z-Mirror Nodes, Node Options and Node Weight won't be displayed.
 			  This description format will be displayed:
 				
 				Wheel node of wheel X
-
+			
+			**If the node is a cinecam node (0.2.2+) here is the example output:
+				Node X
+				Cinecam node
+				Coordinates: x, y, z
+				Bindings:  ...
+				Options: ...
+			
 			Selection of Nodes - Example output:
 				For selection of X,Y,Z
 				nodes
@@ -388,7 +399,8 @@ When you've entered your choice, you will move to the corresponding sequence of 
 				1,...
 				2,...
 				;Renumbered nodes: [X,Y,Z]
-
+				
+				**Wheel nodes (0.2+) will be displayed as comments, while cinecam nodes (0.2.2+) will be displayed under cinecam header.
 			All Nodes - Example output:
 				nodes
 				0,...
@@ -508,6 +520,7 @@ When you've entered your choice, you will move to the corresponding sequence of 
 			More data to be collected in future updates
 			
 			***0.2.1+ only: fixed miscalculation in which nodes are repeated for the next wheel.
+			***0.2.2+ versions factor in cinecam nodes, so you will be able to use the values for flextire sections
 			
 		*A and B are nodes
 		The first integer in each line is the index number of the wheel.

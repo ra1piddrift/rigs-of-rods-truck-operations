@@ -2,7 +2,7 @@
 
 **Small Python-scripted Rigs of rods .truck file editor.**
 
-**Current Version: 0.2.1**
+**Current Version: 0.2.2**
 
 A simple WIP Python console program to make various operations on a .truck or other Rigs of Rods vehicle file.
 Made originally to create trees for the Small Forest Rally (SMFOR) map.  
