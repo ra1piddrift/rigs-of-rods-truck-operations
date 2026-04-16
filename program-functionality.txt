@@ -3,18 +3,17 @@ Some documentation for each function of this program.
 Thank God!
 ~ Ra1pid
 
-[truck-operations.py Version]: 0.2.2
+[truck-operations.py Version]: 0.2.3
 
 [truck-operations.py Update Description]:
-- Now reads cinecam nodes, so generated wheel nodes will now be accurate for flextires: view these nodes in [VIEWDATA]
-- [Truck File Menu] now shows option to create a node edit group if no edit groups are made
-- Bugfix: errors in functions relating to introduction of wheel nodes
-- Bugfix: fixed issue in [VIEWDATA] where it shows all of the vehicle beams when selecting 'Show beams' option for node groups created through auto flare creation, and any node group that doesn't have shared beams
-- Bugfix: fixed issue in [UNDONODESEDIT] where node weight values were not being undone even when selected for undoing
+- Bugfix: fixed issue in viewing nodes [VIEWDATA], error when displaying some edit groups
+- Bugfix: fixed error in [EDITNODES] editing weight values for nodes for wheel/cinecam nodes
+- Fixed [EDITNODESHISTORY] not showing up when edit has been undone.
 
-[Program Functionality Update Date]: 02/03/25
+[Program Functionality Update Date]: 16/04/26
 [Program Functionality Update Description]
-	- added changes occurring in truck-operations.py 0.2.2 for (done) sections
+	- added changes occurring in truck-operations.py 0.2.3 for (done) sections
+	- finished sections: [Edit Group Menu], [NEWEDITGRP], [SELECTEDITGRP], [Edit Nodes Menu], [EDITNODES], [Z-MIRROR], [EDITNODESHISTORY], [SHOWEDITNODES]
 
 [Function List, by menus]
 (done) - Documentation has been completed for this function/menu
@@ -24,22 +23,22 @@ Thank God!
 	- 2. Select a .truck file for operations - [SELECTTRUCK] (done)
 	- 101. Create new torquecurve - [TORQCURVE] (done)
 
--> - [Truck File Menu] from [SELECTTRUCK] (done)
+ - [Truck File Menu] from [SELECTTRUCK] (done)
 ->	- 1. View data groups - [VIEWDATA] (done)
-	- 2. Edit nodes menu - [EDITNODES]
+	- 2. Edit nodes menu - [Edit Group Menu] (done)
 	- 51. Auto-create headlight flares - [HEADFLARES]
 	- 101. Convert nodes to map coordinates - .tobj format - [TRUCK2TOBJ]
 
-- [Edit Group Menu] from [EDITNODES]
-	- 1. Create a new edit group - [NEWEDITGRP]
-	- 2. Select a node edit group to edit - [SELECTEDITGRP]
+- [Edit Group Menu] from [Truck File Menu] (done)
+	- 1. Create a new edit group - [NEWEDITGRP] (done)
+	- 2. Select a node edit group to edit - [SELECTEDITGRP] (done)
 
-- [Edit Nodes Menu] from [SELECTEDITGRP]
-	- 1. Edit node values collectively - [EDITNODES]
-	- 2. Change list of nodes in edit group (WIP) - UNFINISHED
-	- 3. Toggle Z-Mirror mode - [Z-MIRROR]
-	- 4. View edit history & undo menu - [EDITNODESHISTORY]
-	- 5. Show current node values - [SHOWEDITNODES]
+- [Edit Nodes Menu] from [SELECTEDITGRP] (done)
+->	- 1. Edit node values collectively - [EDITNODES] (done)
+	- 2. Change list of nodes in edit group (WIP) - UNFINISHED, enter -1 at the menu to exit back to [Edit Nodes Menu]
+	- 3. Toggle Z-Mirror mode - [Z-MIRROR] (done)
+->	- 4. View edit history & undo menu - [EDITNODESHISTORY] (done)
+	- 5. Show current node values - [SHOWEDITNODES] (done)
 
 - [Undo Menu] from [EDITNODESHISTORY]
 	- 1. Undo a field - [UNDONODESEDIT]
@@ -172,6 +171,44 @@ If you selected this option, the following message will be shown, meaning the ou
 Any other input will result in displaying only to the console. The following message will be shown:
 
 	Writing to console
+
+[Edit Group Menu]
+[Purpose]: Main menu for operations with node edit groups.
+[Location]: from [Truck File Menu]
+[Availability]: Whenever node edit groups exist in the selected vehicle file, otherwise user will be sent to [NEWEDITGRP] to create a new edit group before entering this menu
+[How to Use]
+In order to use this menu, at least 1 node edit group must exist in the program, so if none are there, the program will direct you to [NEWEDITGRP] to create a new edit group. Then, if a new group is created, will the program display this menu.
+This menu typically is displayed in this format:
+
+	Edit Group Menu:
+	1. Create a new node edit group
+	2. Select a node edit group to edit
+	-1. Exit
+	Enter choice:
+
+Option 1 will allow you to create a new node edit group, which is a user-defined collection of nodes whose values can be operated on, including coordinates, options and weight values. Selecting this will lead you to [NEWEDITGRP].
+Option 2 is to select a node edit group to make edits on. This option leads to [SELECTEDITGRP].
+Entering -1 will exit back to [Truck File Menu]. All changes will be preserved as long as the program is running.
+
+[Edit Nodes Menu]
+[Purpose]: Main menu for the selected edit group, for various operations on the edit group's nodes.
+[Location]: from [SELECTEDITGRP]
+[Availability]: When an active node edit group is selected.
+[How to Use]
+This menu typically is displayed in this format:
+
+	Node list:  [...]
+	Edit Nodes Menu
+	Z-Mirror mode:  (True/False)
+	X. Operation description
+	...
+	-1. Exit
+	Enter choice:
+
+'Z-Mirror mode' shows whether edits done in this edit group will be reflected along the Z-axis. If 'True', then mirrored nodes will receive mirrored edits for z-values, else if 'False' no edits will be mirrored for any node pair. You can toggle this when no edits have already been made, by selecting option 3 - [Z-MIRROR].
+Operations can be accessed by entering the corresponding integer beside the corresponding description. Some operations can only be accessed when no edits have been made, and other operations can only be accessed when edits have already been made.
+Entering -1 will exit to [Edit Group Menu], which also deselects the node edit group. All changes will be kept when deselecting the node edit group, as long as the program is running.
+
 
 [Function Descriptions]
 
@@ -581,5 +618,419 @@ When you've entered your choice, you will move to the corresponding sequence of 
 					
 [Video Tutorials]: -
 
+[NEWEDITGRP]
+[Function]: Use to create a new node edit group, which is a user-defined group of nodes that can be edited as one unit.
+[Location]: [Edit Group Menu]
+[Function Availability]: All the time in [Edit Group Menu]
+[How to Use]
+Once selected, the following prompt will be displayed:
+
+	Total number of nodes:  (X)
+	Last node index:  (X-1)
+	List nodes to edit collectively:
+	Use - to denote ranges and , to distinguish between nodes and ranges
+	E.g. 0,9-23,44
+	Enter line:
+
+You can enter a line consisting of the list of nodes (nodes and nodes2 accepted) that you want edited collectively.
+For example, if you wanted to move the entire rear suspension geometry, you could list all of the nodes involved and it will create an edit group that you can use to make edits collectively on the whole suspension, i.e. moving it forwards, without distorting the proportions.
+The way to enter a list of nodes is by separating nodes by commas, and for consecutive ranges of nodes, you can use the '-' operator to indicate a range of nodes, which should be separated from other nodes/ranges by commas.
+Example:
+	Node line: 0,9-23,44
+	Nodes in edit group created: [0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 44]
+
+If the creation of the node edit group is successful, this message will be displayed:
+
+	Created Node Edit group at position  X
+
+The position given can be used to identify the same edit group in [SELECTEDITGRP].
+If there is an error in reading the line, this message will be displayed:
+
+	Error in reading input line
+
+Make sure to check if all the values match the loaded node ids and don't go above the last node index, as shown in the prompt above.
+The function will then return to [Edit Group Menu].
+[Video Tutorials]: https://youtu.be/qH5mD5UXhIU?si=UDZqf_UC90BQYveo
+
+[SELECTEDITGRP]
+[Function]: Use to select an existing node edit group of the loaded vehicle file.
+[Location]: [Edit Group Menu]
+[Function Availability]: All the time when [Edit Group Menu] is accessible ([Edit Group Menu] can only be accessed after at least 1 edit node group is loaded/created in [NEWEDITGRP])
+[How to Use]
+The following lines will be displayed at the beginning:
+
+	List of node edit groups and positions:
+	X   [...]
+	...
+	Enter position of node edit group to modify: 
+
+X stands for the position of each node group, that is identified by the list of nodes in square brackets on the right side. The order of edit groups corresponds to which edit group is loaded/created first. To select the edit group you want to conduct operations on, enter the corresponding position number in the prompt to select it. You will then be directed to the [Edit Nodes Menu].
+
+If you enter a value above or below the available range (0 to n-1, where n is the number of active node edit groups), or any other non-integer value, you will get an 'Out of bounds' error and it will return to the [Edit Group Menu].
+
+[Video Tutorials]: https://youtu.be/qH5mD5UXhIU?si=UDZqf_UC90BQYveo, https://youtu.be/7HSR9aHPjjE?si=qdL9gNMf28_0eQrz
+
+[EDITNODES]
+[Function]: Make a new edit to a field of all of the nodes in the node edit group
+[Location]: [Edit Nodes Menu]
+[Function Availability]: All the time
+[How to Use]
+The following prompt will be displayed in this format:
+
+	Choose what to edit:
+	1. x values
+	2. y values
+	3. z values - (no mirroring/will be mirrored)
+	4. Edit options
+	5. Weight values - only nodes with option l (WIP)
+	Any other input: exit menu
+	Enter choice:
+
+Here is a breakdown of the options:
+
+	1. x values: Increase or decrease by a specified value for all the x-values of the nodes in the nodelist.
+	2. y values: Increase or decrease by a specified value for all the y-values of the nodes in the nodelist.
+	3. z values - (no mirroring/will be mirrored): Increase or decrease by a specified value for all the z-values of the nodes in the nodelist. If it shows 'will be mirrored', then change will be reflected across mirrored node pairs.
+	4. Edit options: Add or remove specified option from all of the nodes in the nodelist.
+	5. Weight values - only nodes with option l (WIP): Increase or decrease by a specified value for all the weight values of the nodes in the nodelist that have option 'l'.
+	(Any other input will exit back to [Edit Nodes Menu])
+----------------------------------------------------------------------------------------------
+When you've entered your choice, you will move to the corresponding sequence of prompts:
+
+	1. x values:
+	----------------------------------------------------------------------------------------------
+		The next prompt will be displayed asking for the value to use for the edit:
+
+			Enter amount to add/subtract from the x-values of the nodes
+			Any float/decimal number will be added to the values. Use - to denote subtraction
+			Enter amount: 
+		
+		Here, you can enter in a decimal value that will be added to the x values of all the nodes of the node group.
+		If you wish to subtract an amount from the values, add a '-' sign before the value.
+		Example:
+			Amount: 0.5
+			Result: all x-values increase by 0.5
+		
+			Amount: -2.0
+			Result: all x-values decrease by 2.0
+		Currently no multiplication of amounts are supported.
+		The program will throw this error when the input isn't recognized:
+		
+			Invalid input. Returning to menu
+	
+		Make sure to check that the value you entered is a decimal number and no non-numerical characters are added to the input.
+		Once the edit has been successfully made, this message will be shown:
+			
+			Added new edit
+		
+		The program will then return to [Edit Nodes Menu]. Please use the [SHOWEDITNODES] option there to apply it to your vehicle.
+	----------------------------------------------------------------------------------------------
+	2. y values:
+	----------------------------------------------------------------------------------------------
+		The next prompt will be displayed asking for the value to use for the edit:
+
+			Enter amount to add/subtract from the y-values of the nodes
+			Any float/decimal number will be added to the values. Use - to denote subtraction
+			Enter amount: 
+		
+		Here, you can enter in a decimal value that will be added to the y values of all the nodes of the node group.
+		If you wish to subtract an amount from the values, add a '-' sign before the value.
+		Example:
+			Amount: 0.5
+			Result: all y-values increase by 0.5
+		
+			Amount: -2.0
+			Result: all y-values decrease by 2.0
+		Currently no multiplication of amounts are supported.
+		The program will throw this error when the input isn't recognized:
+		
+			Invalid input. Returning to menu
+	
+		Make sure to check that the value you entered is a decimal number and no non-numerical characters are added to the input.
+		Once the edit has been successfully made, this message will be shown:
+			
+			Added new edit
+		
+		The program will then return to [Edit Nodes Menu]. Please use the [SHOWEDITNODES] option there to apply it to your vehicle.
+	----------------------------------------------------------------------------------------------
+	3. z values - (no mirroring/will be mirrored):
+	----------------------------------------------------------------------------------------------
+		The next prompt will be displayed asking for the value to use for the edit:
+
+			When Z-mirror disabled:
+
+				Enter amount to add/subtract from the z-values of the nodes
+				Any float/decimal number will be added to the values. Use - to denote subtraction
+				Enter amount:
+			
+			When Z-mirror enabled:
+		
+				Enter amount to add/subtract from the z-values of the nodes
+				Any float/decimal number will be added to the absolute amount for values. Use - to denote subtraction
+				Enter amount: 
+
+		Here, you can enter in a decimal value that will be added to the z values of all the nodes of the node group.
+		If you wish to subtract an amount from the values, add a '-' sign before the value.
+		However, if Z-mirror is enabled, it will show 'will be mirrored' beside the option name. 
+		This means the edit will be reflected between mirrored nodes. 
+		If Z-mirror is disabled, it will show 'no mirroring' beside the option name. 
+		This means that the edit will not be reflected between mirrored nodes.
+		For example:
+	
+			Node A: 2,4,10
+			Node B: 2,4,-10
+			Node A and B are mirrored nodes
+			z-value edit of -5:
+			Z-mirror enabled:
+				Node A: 2,4,5
+				Node B: 2,4,-5
+			Z-mirror disabled:
+				Node A: 2,4,5
+				Node B: 2,4,-15
+		
+		Currently no multiplication of amounts are supported.
+		The program will throw this error when the input isn't recognized:
+		
+			Invalid input. Returning to menu
+	
+		Make sure to check that the value you entered is a decimal number and no non-numerical characters are added to the input.
+		Once the edit has been successfully made, this message will be shown:
+			
+			Added new edit
+		
+		The program will then return to [Edit Nodes Menu]. Please use the [SHOWEDITNODES] option there to apply it to your vehicle.
+		
+	----------------------------------------------------------------------------------------------
+	4. Edit options:
+	----------------------------------------------------------------------------------------------
+		The following prompt will ask for how to adjust the options for all the nodes in the node group:
+
+			Choose how to edit options for nodes:
+			1. Add to option list
+			2. Subtract from option list
+			Anything else: Exit
+			Enter choice: 
+
+		Explanation of options:
+			1. Add to option list: Append a string of letters that denote options to each node of the node edit group.
+			2. Subtract from option list: Remove options derived from a received string from each node of the node edit group.
+			Anything else: Exit back to [Edit Nodes Menu].
+	
+		Walkthrough for options:
+		----------------------------------------------------------------------------------------------
+			1. Add to option list:
+			----------------------------------------------------------------------------------------------
+				This prompt will be displayed:
+
+					List of possible option values:  ['n', 'm', 'f', 'x', 'y', 'c', 'h', 'e', 'b', 'p', 'L', 'l']
+					To add a value to options, type those values without spaces
+					E.g.: mb - if values aren't already in node's option list, m and b will be added
+					Enter values to add to node option lists: 
+			
+				You can now enter a string of letters corresponding to the option letters that you want added to each node.
+				The list of possible option values describes the letters that will be recognized as node options.
+				You can read about what each node option means in the RoR Documentation - Truck File Format webpage.
+				Once you have entered the string, it will display all the recognized values from your entered string:
+				
+					Recognized list: ...
+				
+				If it did not recognize any value from the entered string, this message will be shown:
+				
+					Did not recognize any value!
+
+				If the program is able to recognize values from the entered string, all nodes that don't have options in the recognized list will have the options appended to them.
+				NOTE: If a node doesn't have option 'l' and the same is in the recognized list, the weight will also be set to 0 when the option is added, and this message will be shown:
+					Setting weight to  0
+
+				Example of addition to option list:
+					
+					node X: 0,0.1,0.1,0.1,l 2.4
+					node Y: 1,0.5,0.1,0.1
+					Entered string for Add to option list: nmfl
+					node X after adding: 0,0.1,0.1,0.1,lnmf 2.4
+					node Y after adding: 1,0.5,0.1,0.1, nmfl 0
+			----------------------------------------------------------------------------------------------
+			2. Subtract from option list:
+			----------------------------------------------------------------------------------------------
+				This prompt will be displayed:
+
+				List of possible option values:  ['n', 'm', 'f', 'x', 'y', 'c', 'h', 'e', 'b', 'p', 'L', 'l']
+				To subtract a value from options, type those values without spaces
+				E.g.: mb - if values are already in node's option list, they will be deleted
+				Enter values to subtract from node option lists:
+
+				You can now enter a string of letters corresponding to the option letters that you want removed from each node.
+				The list of possible option values describes the letters that will be recognized as node options.
+				You can read about what each node option means in the RoR Documentation - Truck File Format webpage.
+				Once you have entered the string, it will display all the recognized values from your entered string:
+				
+					Recognized list: ...
+				
+				If it did not recognize any value from the entered string, this message will be shown:
+				
+					Did not recognize any value!
+
+				If the program is able to recognize values from the entered string, all nodes that have options in the recognized list will have the options removed from them.
+				NOTE: Option 'l' cannot be removed in this program, and this message will be shown:
+
+					Option l cannot be modified using this function. Ignoring it.
+
+				Example of removal from option list:
+					
+					node X: 0,0.1,0.1,0.1,fl 2.4
+					node Y: 1,0.5,0.1,0.1,x
+					Entered string for Subtract from option list: nmf
+					node X after adding: 0,0.1,0.1,0.1,l 2.4
+					node Y after adding: 1,0.5,0.1,0.1,x
+			----------------------------------------------------------------------------------------------
+
+		Once the edit has been successfully made, this message will be shown:
+			
+			Added new edit
+		
+		The program will then return to [Edit Nodes Menu]. Please use the [SHOWEDITNODES] option there to apply it to your vehicle.
+	----------------------------------------------------------------------------------------------
+	5. Weight values - only nodes with option l (WIP):
+	----------------------------------------------------------------------------------------------
+		Only nodes that have the 'l' option can have any changes to its weight values. 
+		The program will first check if there are any nodes without the 'l' option, when this following message is displayed:
+	
+			Checking nodes with weight option disabled
+	
+		If all nodes have the weight option 'l', then this message will be displayed:
+
+			All nodes have weight option enabled
+
+		If there are nodes in the node list that don't have this option, this prompt will be displayed to the user:
+
+			Found nodes without weight option!
+			Nodes without weight option:  [...]
+			Weight edits to such nodes won't have any effect
+			Do you wish to enable these nodes with weight option?
+			y: Yes
+			Anything else: No
+			Enter choice: 
+	
+		If you entered 'y' then all nodes that do not have the 'l' weight option will have it appended to its option list, setting their weights to 0.
+		This message will be shown for each node that gets the 'l' option:
+		
+			Setting weight to  0
+	
+			*This message will also be shown afterwards since a new edit in the options field has been automatically made:
+			
+				Added new edit	
+			
+
+		If you entered anything else, any node that doesn't have the 'l' weight option will not be affected by the following edit.
+		The next prompt will be displayed asking for the value to use for the edit:
+
+			Enter amount to add/subtract from the weight values of the nodes
+			Any float/decimal number will be added to the values. Use - to denote subtraction
+			Enter amount:
+		
+		Here, you can enter in a decimal value that will be added to the weight values of all the nodes of the node group, except any nodes that don't have the weight option 'l'.
+		If you wish to subtract an amount from the values, add a '-' sign before the value.
+		Example:
+			Amount: 0.5
+			Result: all values increase by 0.5
+		
+			Amount: -2.0
+			Result: all values decrease by 2.0
+		Currently no multiplication of amounts are supported.
+		The program will throw this error when the input isn't recognized:
+		
+			Invalid input. Returning to menu
+	
+		Make sure to check that the value you entered is a decimal number and no non-numerical characters are added to the input.
+		Once the edit has been successfully made, this message will be shown:
+			
+			Added new edit
+		
+		The program will then return to [Edit Nodes Menu]. Please use the [SHOWEDITNODES] option there to apply it to your vehicle.
+	----------------------------------------------------------------------------------------------
+
+[Video Tutorials]: -
+
+[Z-MIRROR]
+[Function]: Toggles Z-mirror mode for all nodes in edit group list; only enabled when all nodes have mirrored pairs in the edit group
+[Location]: [Edit Nodes Menu]
+[Function Availability]: When no edits have been made in the edit group, or all edits have been undone.
+[How to Use]
+If Z-mirror mode is False: 
+----------------------------------------------------------------------------------------------
+	It will first check if all nodes have their mirrored node pairs in the edit group already.
+		If some mirrored nodes have their pairs outside of the edit group, then this prompt will be shown:
+	
+			Some external z-mirror nodes found that are not included in edit group
+			 [...]
+			Add outstanding mirror nodes to edit group?
+			y: Yes
+			Anything else: No
+			Only if all mirror nodes are included then Z-mirror mode will work
+			Enter choice: 
+	
+		Entering 'y' will allow all the nodes identified in the square brackets to be added to the edit group, which is the only way that Z-mirror mode can be enabled for this edit group. This next message will show that the nodes have been added to the edit group:
+
+			Added nodes to edit list
+
+		Any other input will return the program to [Edit Nodes Menu] without any change.
+	
+	Once the program verifies that all mirrored node pairs exist in the edit group, then it will display these messages, showing that Z-mirror mode is enabled:
+	
+		Creating full list of mirror nodes
+		Mirror nodes found:  [4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14]
+		Z-mirror mode enabled
+	
+	Now, Z-mirror mode will be shown as True in [Edit Nodes Menu].
+	The program will now return to [Edit Nodes Menu].
+----------------------------------------------------------------------------------------------
+If Z-mirror mode is True:
+----------------------------------------------------------------------------------------------
+	These message will be displayed, showing that Z-mirror mode is disabled:
+
+		Z-mirror mode disabled
+
+	Now, Z-mirror mode will be shown as False in [Edit Nodes Menu].
+	The program will now return to [Edit Nodes Menu].
+
+[Video Tutorials]: https://youtu.be/qH5mD5UXhIU?si=UDZqf_UC90BQYveo, https://youtu.be/7HSR9aHPjjE?si=qdL9gNMf28_0eQrz
+
+[EDITNODESHISTORY]
+[Function]: Displays history of all edits made in the node edit group
+[Location]: [Edit Nodes Menu]
+[Function Availability]: When at least 1 edit has been made in the edit group, or at least 1 edit has been undone. (*in versions below 0.2.3 the option doesn't show up if there are no edits, regardless of edits undone)
+[How to Use]
+If you selected this option, the following will be displayed:
+
+	Edit History:
+	From earliest edit to latest
+	*edits*
+	Visit undo menu?
+	y: Go to undo menu
+	Anything else: Return to menu
+	Enter choice:	
+
+All the edits done to this node edit group will be displayed above, organized according to its field. Each field that has been edited will be displayed in this format:
+
+	X : field [...]
+	
+X stands for the reference ID for the field in the list of edits. 'field' describes the field of the ref. ID and the values in the square brackets are the list of edits that have been appended to the field in the node edit group. The values are separated by commas, and ordered from earliest edit to latest. An example is shown below:
+
+	0 :  x [0.1, 0.2]
+	Meaning: Two edits for the x-values; addition of 0.1 and then addition of 0.2. Access with ID 0.
+
+If you enter 'y', then the program will go to [Undo Menu]. Any other input will return the program back to [Edit Nodes Menu].
+[Video Tutorials]: -
+
+[SHOWEDITNODES]
+[Function]: Displays all nodes of the edit group
+[Location]: [Edit Nodes Menu]
+[Function Availability]: All the time
+[How to Use]
+Selecting this option will take you straight to [View Options Menu-Nodes]. 
+There, you can select any options for additional data to display alongside the node data.
+After that, you will move to [Output Choice Menu] to choose what method to display the data.
+Once you continue past that menu, the data will be displayed and the program will return back to [Edit Nodes Menu].
+[Video Tutorials]: https://youtu.be/qH5mD5UXhIU?si=UDZqf_UC90BQYveo, https://youtu.be/7HSR9aHPjjE?si=qdL9gNMf28_0eQrz
 
 More documentation coming soon...

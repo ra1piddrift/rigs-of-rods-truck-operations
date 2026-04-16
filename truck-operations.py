@@ -240,6 +240,8 @@ class Node:
                 else:
                     self.z+=value
             case('+opt'):
+                if self.node_type>2:
+                    return
                 if self.node_opt_initial == "unmodified":
                     self.node_opt_initial = self.node_opt
                 for i in value:
@@ -255,6 +257,8 @@ class Node:
                             print("Setting weight to ",str(self.weight))
 
             case('-opt'):
+                if self.node_type>2:
+                    return
                 if self.node_opt_initial == "unmodified":
                     self.node_opt_initial = self.node_opt
                 for i in value:
@@ -268,6 +272,8 @@ class Node:
                 
             case('weight'):
                 #print(1)
+                if self.node_type>2:
+                    return
                 check = self.node_opt.find('l')
                 if check>=0:
                     #print(2)
@@ -297,6 +303,8 @@ class Node:
                 else:
                     self.z-=value
             case('opt'):
+                if self.node_type>2:
+                    return
                 ini_l_chk = self.node_opt_initial.find('l')
                 mod_l_chk = self.node_opt.find('l')
                 if mod_l_chk and not ini_l_chk:
@@ -306,6 +314,8 @@ class Node:
                 self.node_opt_initial = "unmodified"
             case('weight'):
                 #print(1)
+                if self.node_type>2:
+                    return
                 check = self.node_opt.find('l')
                 #print(check)
                 if check>=0:
@@ -1028,15 +1038,14 @@ class Edit_node_groups:
 
     def view_history(self,show_quick = False):
         print("Edit History:\nFrom earliest edit to latest")
-        for i in range(len(self.edits)):
-            print(i,": ",self.edits[i][0],end=" ")
-            print(self.print_decimal_list(self.edits[i][1:]))
-            #for j in self.edits[i][1:]:
-            #    print(str(j),end=" ")
-            #print("]")
+        if len(self.edits)==0:
+            print("No edits to show!")
+        else:
+            for i in range(len(self.edits)):
+                print(i,": ",self.edits[i][0],end=" ")
+                print(self.print_decimal_list(self.edits[i][1:]))
+            
         if show_quick:
-            if len(self.edits)==0:
-                print("No edits to show!")
             return
         print("Visit undo menu?")
         print("y: Go to undo menu")
@@ -1094,7 +1103,7 @@ class Edit_node_groups:
             if len(self.edits)==0:
                 print("2. Change list of nodes in edit group (WIP)")
                 print("3. Toggle Z-Mirror mode")
-            else:
+            if len(self.edits)>0 or len(self.undo_edits)>0:
                 print("4. View edit history & undo menu")
             print("5. Show current node values")
             print("-1. Exit")
@@ -1109,7 +1118,7 @@ class Edit_node_groups:
                     self.change_nodelist()
                 case(3) if len(self.edits)==0:
                     self.toggle_z_mirror()
-                case(4) if len(self.edits)>0:
+                case(4) if len(self.edits)>0 or len(self.undo_edits)>0:
                     self.view_history()
                 case(5):
                     self.show_node_val()
@@ -2496,7 +2505,8 @@ class Truck:
                                     add_grp = False
                                     break
                             if add_grp:
-                                edit_grps+=j
+                                #print(edit_grps)
+                                edit_grps.append(j)
 
 
         if len(edit_grps)>0:
@@ -3084,7 +3094,7 @@ def menu():
     return
 
 #main code
-print("truck-operations.py - Version 0.2.2")
+print("truck-operations.py - Version 0.2.3")
 print("Author: Ra1pid")
 option = input("Press enter to continue, or enter info for more information\n")
 if option.find("info")>-1:
