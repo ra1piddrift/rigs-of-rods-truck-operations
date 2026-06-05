@@ -3,20 +3,19 @@ Some documentation for each function of this program.
 Thank God!
 ~ Ra1pid
 
-[truck-operations.py Version]: 0.2.3
+[truck-operations.py Version]: 0.2.4
 
 [truck-operations.py Update Description]:
-- Bugfix: fixed issue in viewing nodes [VIEWDATA], error when displaying some edit groups
-- Bugfix: fixed error in [EDITNODES] editing weight values for nodes for wheel/cinecam nodes
-- Fixed [EDITNODESHISTORY] not showing up when edit has been undone.
+- Bugfix: fixed issue in [HEADFLARES], when entering in wheel node as lead node for creating headlight flares
+- Bugfix: fixed error in [VIEWDATA], when showing beams with numerical indices
 
-[Program Functionality Update Date]: 16/04/26
+[Program Functionality Update Date]: 05/06/26
 [Program Functionality Update Description]
-	- added changes occurring in truck-operations.py 0.2.3 for (done) sections
-	- finished sections: [Edit Group Menu], [NEWEDITGRP], [SELECTEDITGRP], [Edit Nodes Menu], [EDITNODES], [Z-MIRROR], [EDITNODESHISTORY], [SHOWEDITNODES]
+	- finished remaining sections: [Undo Menu], [UNDONODESEDIT], [REDONODESEDIT], [HEADFLARES], [TRUCK2TOBJ]
 
 [Function List, by menus]
 (done) - Documentation has been completed for this function/menu
+All functions now have documentation!
 
 - [Main Menu] (done)
 	- 1. Open a .truck file - [OPENTRUCK] (done)
@@ -24,10 +23,10 @@ Thank God!
 	- 101. Create new torquecurve - [TORQCURVE] (done)
 
  - [Truck File Menu] from [SELECTTRUCK] (done)
-->	- 1. View data groups - [VIEWDATA] (done)
+	- 1. View data groups - [VIEWDATA] (done)
 	- 2. Edit nodes menu - [Edit Group Menu] (done)
-	- 51. Auto-create headlight flares - [HEADFLARES]
-	- 101. Convert nodes to map coordinates - .tobj format - [TRUCK2TOBJ]
+->	- 51. Auto-create headlight flares - [HEADFLARES] (done)
+	- 101. Convert nodes to map coordinates - .tobj format - [TRUCK2TOBJ] (done)
 
 - [Edit Group Menu] from [Truck File Menu] (done)
 	- 1. Create a new edit group - [NEWEDITGRP] (done)
@@ -40,9 +39,9 @@ Thank God!
 ->	- 4. View edit history & undo menu - [EDITNODESHISTORY] (done)
 	- 5. Show current node values - [SHOWEDITNODES] (done)
 
-- [Undo Menu] from [EDITNODESHISTORY]
-	- 1. Undo a field - [UNDONODESEDIT]
-	- 2. Redo a field - [REDONODESEDIT]
+- [Undo Menu] from [EDITNODESHISTORY] (done)
+	- 1. Undo a field - [UNDONODESEDIT] (done)
+	- 2. Redo a field - [REDONODESEDIT] (done)
 
  - [View Options Menu] during display (done)
  - [Output Choice Menu] during display (done)
@@ -208,6 +207,45 @@ This menu typically is displayed in this format:
 'Z-Mirror mode' shows whether edits done in this edit group will be reflected along the Z-axis. If 'True', then mirrored nodes will receive mirrored edits for z-values, else if 'False' no edits will be mirrored for any node pair. You can toggle this when no edits have already been made, by selecting option 3 - [Z-MIRROR].
 Operations can be accessed by entering the corresponding integer beside the corresponding description. Some operations can only be accessed when no edits have been made, and other operations can only be accessed when edits have already been made.
 Entering -1 will exit to [Edit Group Menu], which also deselects the node edit group. All changes will be kept when deselecting the node edit group, as long as the program is running.
+
+[Undo Menu]
+[Purpose]: Menu for undoing or redoing edits made to the edit group.
+[Location]: from [EDITNODESHISTORY]
+[Availability]: When at least 1 edit has been made to the edit group.
+[How to Use]
+This menu is displayed in this format:
+
+	Undo History:
+	Shows latest undo for each field
+	*List of fields with undone edits, latest undo shown*
+	Undo Menu:
+	1. Undo a field
+	2. Redo a field
+	-1. Exit menu
+	Enter choice:
+
+----------------------------------------------------------------------------------------------
+The undo history is displayed above the undo menu, where it only shows the latest undo for each field:
+
+	X : field [value]
+	
+Where X indicates the reference number of the field, and the latest undo of that field is listed in the square brackets.
+Example:
+	
+	0 :  x [0.1]
+	
+	Meaning: An addition of 0.1 in the x-values is the latest to be undone. Reference the field at index 0.
+
+When there aren't any edits that have been undone, this message will be shown:
+
+	No undo history to show
+----------------------------------------------------------------------------------------------
+Below the undo history, the undo menu will show these options:
+
+	1. Undo a field - Allows you to undo an edit by the field you specify - leads to [UNDONODESEDIT]
+	2. Redo a field - Allows you to redo an edit by the field you specify - leads to [REDONODESEDIT]
+	Entering -1 will exit back to [Edit Nodes Menu]. All changes will be preserved as long as the program is running.
+----------------------------------------------------------------------------------------------
 
 
 [Function Descriptions]
@@ -1033,4 +1071,285 @@ After that, you will move to [Output Choice Menu] to choose what method to displ
 Once you continue past that menu, the data will be displayed and the program will return back to [Edit Nodes Menu].
 [Video Tutorials]: https://youtu.be/qH5mD5UXhIU?si=UDZqf_UC90BQYveo, https://youtu.be/7HSR9aHPjjE?si=qdL9gNMf28_0eQrz
 
-More documentation coming soon...
+[UNDONODESEDIT]
+[Function]: Allows user to undo an edit to a field of the nodes in the edit group.
+[Location]: [Undo Menu]
+[Function Availability]: All the time
+[How to Use]
+If you selected this option, the following will be displayed:
+
+	Edit History:
+	From earliest edit to latest
+	*List of edits made*
+	Do you want to undo any field?
+	Enter integer corresponding to above fields to undo that field
+	NOTE: An undo for options resets all nodes to the original options including the l option!
+	Nodes with l option added will have weight values cleared with undo.
+	Anything else: Return to undo menu
+	Enter choice:
+
+----------------------------------------------------------------------------------------------
+The edit history will first be displayed above the prompt. All the edits done to this node edit group are displayed, organized according to its field. Each field that has been edited will be displayed in this format:
+
+	X : field [...]
+	
+X stands for the reference ID for the field in the list of edits. 'field' describes the field of the ref. ID and the values in the square brackets are the list of edits that have been appended to the field in the node edit group. The values are separated by commas, and ordered from earliest edit to latest. An example is shown below:
+
+	0 :  x [0.1, 0.2]
+	Meaning: Two edits for the x-values; addition of 0.1 and then addition of 0.2. Access with ID 0.
+----------------------------------------------------------------------------------------------
+Below the edit history, the program asks whether you want to undo any edit listed in the edit history. You can undo the latest edit of a specific field by entering the corresponding reference ID.
+Example:
+	Edit History:
+	From earliest to latest
+	0 :  x [0.1, 0.2]
+	
+	If you enter in 0:
+		- 0.2 will be subtracted from the x-values
+		- Edit History afterwards:
+			0 :  x [0.1]
+As the NOTE says, only for the 'options' field, if you choose to undo any edit made, it will reset all of the edit group nodes to the original options, including the 'l', weight option. If the 'l' option is undone, the weight values of those nodes which didn't originally have the 'l' option will have their weight values cleared.
+Any edits that have been undone will be appended to the undo history. 
+Any other input apart from any ref ID will return the program back to [Undo Menu].
+----------------------------------------------------------------------------------------------
+[Video Tutorials]: -
+
+[REDONODESEDIT]
+[Function]: Allows user to redo an edit to a field of the nodes in the edit group.
+[Location]: [Undo Menu]
+[Function Availability]: All the time
+[How to Use]
+If you selected this option, the following will be displayed:
+
+	Undo History:
+	Shows latest undo for each field
+	*List of undone edits made*
+	Do you want to redo any field?
+	Enter integer corresponding to above fields to redo that field
+	Anything else: Return to undo menu
+	Enter choice:
+
+----------------------------------------------------------------------------------------------
+The undo history is displayed in the same format as [Undo Menu]:
+
+	X : field [value]
+	
+Where X indicates the reference number of the field, and the latest undo of that field is listed in the square brackets.
+Example:
+	
+	0 :  x [0.1]
+	
+	Meaning: An addition of 0.1 in the x-values is the latest to be undone. Reference the field at index 0.
+
+When there aren't any edits that have been undone, this message will be shown:
+
+	No undo history to show
+----------------------------------------------------------------------------------------------
+Below the undo history, the program will ask you which field to redo. You can select the field based on the reference number given in the undo history.
+If you do select a field, the value listed in the square brackets will be re-appended to the nodes in the edit group.
+Example:
+	Undo History:
+	Shows latest undo for each field
+	0 :  x [0.1]
+	
+	If you enter in 0:
+		- 0.1 will be added to the x-values
+		- Undo History afterwards:
+			No undo history to show
+		- Edit History afterwards:
+			0 :  x [...,0.1] (0.1 is latest edit to the x-values)
+
+----------------------------------------------------------------------------------------------
+[Video Tutorials]: -
+
+[HEADFLARES]
+[Function]: Generates a set of headlight flares for the vehicle file based off a specified node.
+[Location]: [Truck File Menu]
+[Function Availability]: All the time
+[How to Use]
+If you selected this option, the following prompt will be shown:
+
+	Creates headlight flares for a vehicle based on 1 lead node
+	Node must have a non-zero z value!
+	Enter index of lead node to use:
+
+The prompt asks the user to enter in the ID of a node that will be set as the lead node for the headlight flares.
+These are the conditions for which node can be used as a lead node:
+
+	1. Node has a non-zero z value: As mentioned in the prompt, the lead node must have a z-value that is not 0.
+		If the node has a z-value of 0, this message will be displayed:
+			Node in center  of z-axis! Won't be able to create flares with this node!
+		The program will return to [Truck File Menu].
+
+	2. Node must have a Z-mirror node pair: The lead node must have a mirror node for the program to create the flares.
+		If the node entered doesn't have a mirrored pair, this message will be shown: 
+			Creating headlight flares
+			Mirror to lead node not found; returning to menu
+		The program will return to [Truck File Menu].
+
+	3. Node cannot be a wheel node: If the node ID entered in refers to a wheel node, it won't have written coordinates that the program can use to create flares.
+		If the node is a wheel node, this message will be shown:
+			Node is a wheel node; this node cannot be used
+		The program will return to [Truck File Menu].
+
+This message will be shown if the program didn't recognize the input, after which it will return to [Truck File Menu]:
+
+	Node not found
+
+Make sure to check the input to match the node ID of the node you want to use as the lead node.
+----------------------------------------------------------------------------------------------
+If the program can find a mirrored pair for the entered node, the reference node will then be selected from a shortlist.
+These messages will be displayed showing the selection process:
+
+	[(X, rating_X), ...]
+	Selected reference node:  X
+
+The reference node that is selected (X) will have the highest value for rating among the list, but if you feel after testing that the result isn't good enough, you can try substituting the reference node & its pair with another node from the list & its pair.
+
+If the program could not find any good candidates for a reference node, this message will be shown:
+
+	Unable to find good reference nodes for this lead node.
+	Try using a .truck file with more mirror nodes or a different lead node
+
+The program will then return to [Truck File Menu]. 
+You can try a different node as a lead node for the vehicle, as some nodes may be too far away from the entered in node to be used as a reference node.
+----------------------------------------------------------------------------------------------
+Once the reference node has been selected, this program will check if the flares can align properly. 
+Only if the nodes aren't aligned, this prompt will be shown:
+
+	Flares won't be perfectly aligned to light up front path.
+	Would you like to edit nodes to adjust the change?
+	y: Yes
+	Anything else: No
+	Enter choice:
+	----------------------------------------------------------------------------------------------
+	If you enter in 'y', an node edit group will be created with the reference node & its mirror pair.
+	In this edit group, an edit will be made to those nodes to correct the alignment. 
+	These messages will show the progress of the adjustment:
+
+		Created Node Edit group at position  X
+		Difference:  *value*
+		Added new edit
+
+	A new node group with a description of 'Flare creation adjustments' will be made at position X, with an adjustment of *value* in the x-values.
+	After this, the program will ask whether to display the edited node lines:
+		
+		Show current node values?
+		y: Yes
+		Anything else: No
+		Enter choice:
+	
+	If you enter 'y', the program will continue to [View Options Menu-Nodes] to view the edit group's nodes. 
+	From there you can copy the new node lines & use it to replace the old node lines in the vehicle file in use.
+	This is recommended since it is easier to transfer the edited node lines here to the vehicle file than to go through the [Edit Group Menu].
+	Any other input will just continue the program to the next section. 
+	You can always retrieve the lines by going to [Edit Group Menu]->[SELECTEDITGRP] and selecting the correct edit group.
+	
+	Before moving on to the next section, the program will display this message:
+
+		Relevant nodes adjusted
+	----------------------------------------------------------------------------------------------
+	If you enter any other input, the program will continue to the next section, without any changes to the reference nodes.
+	This means that the flares in-game may not light up the front properly.
+----------------------------------------------------------------------------------------------
+The next prompt will be to set the flare size of the headlight flares:
+
+	Enter flare size to set or any value less or equal to 0.001 for invisible flare:
+
+By default, the flare size will be set to 0.001, which will result in an invisible-source flare that lights up the environment.
+If you enter in a decimal value above 0.001, that value will be set as the size for the flares.
+----------------------------------------------------------------------------------------------
+After you have set the flare size, the program will move to [Output Choice Menu], to allow you to decide how to display the generated headlight flares.
+The flares will be displayed as a flares2 section. 
+If you selected console, then you can copy from the program, or if you selected Output.txt, then you have to open Output.txt file in the folder to copy the lines.
+Paste the lines in the vehicle file in use. 
+If you are using materialflarebindings, make sure to append below the other flares, or adjust the numbering of the flare binding lines according to the place where you pasted the lines. Save & test in-game.
+
+[Video Tutorials]: https://youtu.be/EX5QQ1qXWwM?si=vAywwh4DZS2wfdaM
+
+[TRUCK2TOBJ]
+[Function]: Converts the vehicle file's nodes into map objects for a .tobj file.
+[Location]: [Truck File Menu]
+[Function Availability]: All the time
+[How to Use]
+This function is used as a step in converting generated vegetation coordinates in Blender to usable map objects in a .tobj file.
+----------------------------------------------------------------------------------------------
+To effectively use this feature, you will need these tools:
+
+	- Blender 2.91
+	- RoR .truck export addon (installed in Blender 2.91)
+
+You will need the terrain to distribute vegetation on imported into Blender. If it is a .mesh, you can import in Blender 2.78/2.79 with the mesh importer addon: 
+If you import a terrain & the ground doesn't face Z-up, rotate it & apply the Rotation modifier. When you export to .truck file, the axes match with Blender's axes, only map objects' axes don't align with Blender's axes, so you need to apply the modifier for all the generated nodes to be exported correctly.
+Add a new mesh plane/cube object somewhere and go to edit mode. Highlight all and hit Alt+M->At center. Rename it as 'single node'.
+Select the terrain mesh object, and go to Properties->Particles tab->New.
+Set Type to 'Hair' and under Render dropdown menu, select 'Object'. Set Dupli Object as 'single node' object.
+Under Emission, you can adjust the rate of distribution on the selected terrain by setting a value for Number.
+You can also change the distribution pattern by adjusting the Seed value.
+Once you've finished adjusting the settings, go to the Modifier tab & under the ParticleSystem modifier, select 'Convert'.
+This will give you a collection of nodes scattered on the selected terrain. Make sure all the exported objects are highlighted & hit Ctrl+J in 3D View.
+(If you are in v2.78/2.79, you can copy & paste the object directly into v2.91, or you can paste into a new file & export as .dae & then import it into v2.91.)
+Check the .tobj file if the terrain is a .mesh file. If the x-rotation is 90, save the z-rotation value, if not, save the y-rotation value.
+In the .blend file in 2.91, where the scattered node object is, rotate it the negative value of the saved value in Object mode from Top view, & apply Rotation modifer.
+Rename the object's name & mesh name to 'truck' and go to Export->RoR truck data (.truck). Save the exported .truck file in the same folder as truck-operations.py.
+Now you can open up the exported .truck file in the program and navigate to this function.
+----------------------------------------------------------------------------------------------
+After selecting this option, the program will prompt you for the number of objects to use:
+
+	Enter number of objects to use for coordinates:
+
+This value indicates how many objects you want to use for the scattered coordinates.
+If you enter any value less than 1, the program will reset it to 1:
+
+	Lower than 1. Resetting to 1 object.
+
+
+
+Then the program will ask for the object names (.odef files):
+
+	Enter object name(s) with their rotations separated by commas:
+	E.g.: house, 90, 0, 90
+	Object 0:
+	...
+	Object X-1:
+
+	(X = number of objects)
+
+For each object, enter in the object name, and the 3 rotation values: x, y and z.
+If the program couldn't recognize the input, this message will be shown before exiting back to [Truck File Menu]:
+
+	Problem with rotations!
+
+Make sure all the values are separated by commas, and all the rotation values are given, even if they are 0.
+
+The objects will be added as .odef lines in the sequence in which they were added.
+Example:
+	Inserted sequence of objects: obj1, obj2, obj3
+
+	.tobj lines:
+	...., obj1
+	...., obj2
+	...., obj3
+	...., obj1
+	...., obj2
+	(and so on)	
+----------------------------------------------------------------------------------------------
+After setting the objects, the program will display this prompt:
+
+	Enter coordinates to offset nodes into map positions:
+	E.g.: 512, 0, 512
+	
+If the terrain was a .mesh file, you can simply copy that object's coordinates (first 3 values) and enter it in.
+If the terrain was from a heightmap, you can divide the length & breadth into half and enter that as x and z, and set y to 0. Enter 'x, y, z' into the program.
+Make sure the last value doesn't have a comma, if not the program will not recognize the input line reset all offset values to 0:
+
+	Problem with offset input; resetting it to 0
+
+If you made an error here, you will have to finish the function's course before re-entering from the start again.
+----------------------------------------------------------------------------------------------
+Once the program has set the offset coordinates, the program will move to [Output Choice Menu] to allow you to choose how to display the .tobj lines.
+You can save the output lines in a .tobj file to use in your map.
+
+[Video Tutorials]: -
+
+All documentation done!

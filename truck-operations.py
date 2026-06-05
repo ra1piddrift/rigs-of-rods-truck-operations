@@ -2289,7 +2289,7 @@ class Truck:
                 print("Anything else: No")
                 option = input("Enter choice: ")
                 if option == 'y':
-                    b_list = self.display_beams(False,["INDICES"])
+                    b_list = self.display_beams(False,False,["INDICES"])
                     for i in b_list:
                         print(i)
 
@@ -2750,9 +2750,13 @@ class Truck:
         if check is False:
             print("Node not found")
             return
+        elif ld_node.node_type ==2:
+            print("Node is a wheel node; this node cannot be used")
+            return
         elif ld_node.z==0:
             print("Node in center  of z-axis! Won't be able to create flares with this node!")
             return
+        
         print("Creating headlight flares")
         try:
             mir_ld_node = self.nodes[ld_node.get_mirror()[0]]
@@ -3094,7 +3098,7 @@ def menu():
     return
 
 #main code
-print("truck-operations.py - Version 0.2.3")
+print("truck-operations.py - Version 0.2.4")
 print("Author: Ra1pid")
 option = input("Press enter to continue, or enter info for more information\n")
 if option.find("info")>-1:
